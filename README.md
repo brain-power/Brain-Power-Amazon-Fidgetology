@@ -28,6 +28,7 @@ You can deploy the required AWS resources and demo web app all in one go using t
 ```shell
 ./deploy_example.sh
 ```
+**Note**: Currently deployment is supported only in regions where AWS Rekognition and Kinesis Video Stream services are both available (as of now, these are: **us-east-1** or **us-west-2**). If your default AWS region is not supported, you must [change your default region](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) before executing the deploy command.
 
 This command will:
  * Package code artifacts (Lambda function source files) and upload to a bootstrapping S3 bucket.
