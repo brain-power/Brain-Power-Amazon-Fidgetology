@@ -1,0 +1,308 @@
+# To deploy for the first time, and for each update,
+# run both of the following commands in order:
+#
+# aws cloudformation package \
+# --template-file template.yaml \
+# --output-template-file master-template.yaml \
+# --s3-bucket <your-s3-bucket-name>
+#
+# aws cloudformation deploy \
+# --template-file master-template.yaml \
+# --stack-name <STACK_NAME> \
+# --capabilities CAPABILITY_IAM
+
+AWSTemplateFormatVersion: '2010-09-09'
+# Using Serverless Application Model (SAM) CF template definition
+# See specification: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md
+Transform: 'AWS::Serverless-2016-10-31' 
+Globals:
+  Function:
+    Timeout: 300 # seconds
+    MemorySize: 2048 # MB
+    Environment:
+      Variables:
+        KVS_STREAM_NAME: !Sub "${AWS::StackName}-kvs"
+        KDS_RAW_STREAM_NAME: !Ref RawDataStream
+        KDS_PROCESSED_STREAM_NAME: !Ref ProcessedDataStream
+        REK_STREAM_PROCESSOR_NAME: !Sub "${AWS::StackName}-rek-stream-processor"
+        REK_FACE_COLLECTION: !Sub "${AWS::StackName}-face-collection"
+        REK_ROLE_ARN: !GetAtt RekognitionServiceRole.Arn
+        REK_FACE_MATCH_THRESHOLD: 90
+        UPLOADS_BUCKET_NAME: !Sub "${AWS::StackName}-uploads-${AWS::AccountId}"
+        IdentityPoolId: !Ref IdPool
+
+Resources:
+
+  ####### S3 Buckets #######
+
+  UploadsBucket:
+    Type: AWS::S3::Bucket
+    Description: Bucket that stores static videos uploaded using web app
+    DeletionPolicy: Retain
+    Properties: 
+      AccessControl: PublicRead
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET,POST,PUT,DELETE,HEAD]
+            AllowedOrigins: ['*']
+      BucketName: !Sub "${AWS::StackName}-uploads-${AWS::AccountId}"
+
+  WebAppBucket:
+    Type: AWS::S3::Bucket
+    Description: Bucket that hosts static content of web app
+    DeletionPolicy: Retain
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+      BucketName: !Sub "${AWS::StackName}-webapp-${AWS::AccountId}"
+
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebAppBucket
+      PolicyDocument:
+        Id: BPFidgetologyWebAppPolicy
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub "arn:aws:s3:::${WebAppBucket}/*"
+
+  ####### Cognito/Roles #######
+
+  IdPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      AllowUnauthenticatedIdentities: true
+
+  RoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdPool
+      Roles:
+        unauthenticated: !GetAtt UnauthRole.Arn
+
+  UnauthRole:
+    Type: AWS::IAM::Role
+    Description: Allows unauthenticated web app users to upload videos to S3 bucket from browser (for demo purposes)
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Federated: cognito-identity.amazonaws.com
+          Action: sts:AssumeRoleWithWebIdentity
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonKinesisVideoStreamsReadOnlyAccess
+      Policies:
+        - PolicyName: CognitoUnauthPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                Resource: !Sub "arn:aws:s3:::${AWS::StackName}-uploads-${AWS::AccountId}/*"
+              - Effect: Allow
+                Action:
+                  - kinesis:Get*
+                  - kinesis:Describe*
+                Resource: !GetAtt ProcessedDataStream.Arn
+
+  RekognitionServiceRole:
+    Type: AWS::IAM::Role
+    Description: Allows Rekognition to call services on the account's behalf
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+            Effect: Allow
+            Principal: 
+              Service: rekognition.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRekognitionServiceRole
+
+  ####### Stream Resources #######
+  
+  RawDataStream:
+    Type: AWS::Kinesis::Stream
+    Description: Kinesis Data Stream for ingesting raw output of Rekognition stream processor
+    Properties:
+      Name: !Sub "AmazonRekognition-${AWS::StackName}-kds"
+      RetentionPeriodHours: 24
+      ShardCount: 1
+      StreamEncryption: 
+        EncryptionType: KMS
+        KeyId: alias/aws/kinesis
+
+  ProcessedDataStream:
+    Type: AWS::Kinesis::Stream
+    Description: Kinesis Data Stream for ingesting processed body motion metrics for consumption by Web API
+    Properties:
+      Name: !Sub "${AWS::StackName}-processed-kds"
+      RetentionPeriodHours: 24
+      ShardCount: 1
+      StreamEncryption:
+        EncryptionType: KMS
+        KeyId: alias/aws/kinesis
+
+  StreamResourceProvisionerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Provisions a Kinesis Video Stream and Rekognition Stream Processor when stack is created. Deletes these stream resources when stack is deleted.
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./lambda/StreamResourceProvisioner
+      FunctionName: !Sub "${AWS::StackName}-StreamResourceProvisioner"
+      Timeout: 5
+      Policies: 
+        - AWSLambdaExecute
+        - AmazonKinesisVideoStreamsFullAccess
+        - AmazonRekognitionFullAccess
+        - AmazonKinesisFullAccess
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+                - iam:GetRole
+              Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}*"
+
+  StreamResourceProvisioner:
+    Type: Custom::StreamResourceProvisioner # Custom resource definition
+    Description: A custom resource that executes the StreamResourceProvisioner Lambda Function upon stack creation. This is a temporary workaround until Kinesis Video Stream and Rekognition Stream Processor resource definitions are available through Cloudformation
+    Properties:
+      ServiceToken: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AWS::StackName}-StreamResourceProvisioner"
+    DependsOn: 
+      - RawDataStream
+      - StreamResourceProvisionerLambda
+      - RekognitionServiceRole
+
+  # TODO: add KinesisVideoStream definition, once it is available through Cloudformation
+  # TODO: add Rekognition Stream Processor definition, once it is available through Cloudformation
+  
+  ####### Serverless Lambda Functions #######
+
+  MKVConverterLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Converts static video uploads to streamable .MKV format for ingestion by Kinesis Video Streams
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./lambda/MKVConvert
+      Environment:
+        Variables:
+          FFMPEG_CMD: '-i %i -vcodec copy -an %o'
+      Policies: 
+        - AWSLambdaExecute
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+              Resource: !Sub "arn:aws:s3:::${AWS::StackName}-uploads-${AWS::AccountId}/*"
+      Events:
+        VideoUploadEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref UploadsBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: raw_uploads/
+
+  S3ToKVSLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Artificially streams static .MKV video files in S3 to Kinesis Video Streams
+      Handler: com.brainpower.fidgetology.demo.LambdaFunctionHandler::handleRequest
+      Runtime: java8
+      CodeUri: ./lambda/S3ToKVS/S3ToKVS.jar
+      Policies: 
+        - AWSLambdaExecute
+        - AmazonKinesisVideoStreamsFullAccess
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: !Sub "arn:aws:s3:::${AWS::StackName}-uploads-${AWS::AccountId}/*"
+      Events:
+        VideoConvertedEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref UploadsBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: .mkv
+                  - Name: prefix
+                    Value: mkv_uploads/
+
+  StreamAnalyzer:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./lambda/StreamAnalyzer
+      Policies:
+        - AWSLambdaExecute
+        - AmazonKinesisFullAccess
+      Events:
+        Stream:
+          Type: Kinesis
+          Properties:
+            Stream: !GetAtt RawDataStream.Arn
+            StartingPosition: TRIM_HORIZON
+
+  WebAPI:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: RESTful API endpoint for web app using Amazon API Gateway
+      Handler: index.handler
+      Runtime: nodejs6.10
+      CodeUri: ./lambda/WebApi
+      Policies:
+        - AWSLambdaExecute
+        - AmazonKinesisFullAccess
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+              Resource: !Sub "arn:aws:s3:::${AWS::StackName}-uploads-${AWS::AccountId}/*"
+      Events:
+        GetConfig:
+          Type: Api
+          Properties:
+            Path: /Config
+            Method: get
+        ReadStream:
+          Type: Api
+          Properties:
+            Path: /ProcessedStream
+            Method: get
+
+Outputs:
+  WebAppURL:
+    Value: !GetAtt WebAppBucket.WebsiteURL
+    Description: Public URL for web dashboard hosted on S3
+  WebAppSecureURL:
+    Value: !Sub "https://${WebAppBucket.DomainName}/index.html"
+    Description: Public URL for web dashboard hosted on S3
+  APIEndpoint:
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+    Description: REST API endpoint for web app
