@@ -1,0 +1,5 @@
+node_modules/
+dashboard/js/app/config.js
+deploy.sh
+master-template.yaml
+*.log

@@ -1,0 +1,38 @@
+{
+  "name": "aws-fidgetology-demo-app",
+  "version": "1.0.0",
+  "description": "Code artifacts for Brain Power-AWS KVS-Rekognition blog post.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brain-power/aws-fidgetology-demo-app.git"
+  },
+  "keywords": [
+    "Rekognition",
+    "Kinesis",
+    "AWS",
+    "Lambda",
+    "Brain",
+    "Power"
+  ],
+  "author": "Runpeng Liu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/brain-power/aws-fidgetology-demo-app/issues"
+  },
+  "homepage": "https://github.com/brain-power/aws-fidgetology-demo-app#readme",
+  "dependencies": {
+    "aws-sdk": "^2.202.0",
+    "body-parser": "^1.18.2",
+    "compression": "^1.7.2",
+    "cookie-parser": "^1.4.3",
+    "express": "^4.16.2",
+    "helmet": "^3.11.0",
+    "http": "0.0.0",
+    "method-override": "^2.3.10",
+    "morgan": "^1.9.0"
+  }
+}
