@@ -29,6 +29,7 @@ Globals:
         REK_ROLE_ARN: !GetAtt RekognitionServiceRole.Arn
         REK_FACE_MATCH_THRESHOLD: 90
         UPLOADS_BUCKET_NAME: !Sub "${AWS::StackName}-uploads-${AWS::AccountId}"
+        WEBAPP_BUCKET_NAME: !Sub "${AWS::StackName}-webapp-${AWS::AccountId}"
         IdentityPoolId: !Ref IdPool
 
 Resources:
@@ -285,6 +286,11 @@ Resources:
                 - s3:PutObject
               Resource: !Sub "arn:aws:s3:::${AWS::StackName}-uploads-${AWS::AccountId}/*"
       Events:
+        GetStatic:
+          Type: Api
+          Properties:
+            Path: /App/{proxy+}
+            Method: get
         GetConfig:
           Type: Api
           Properties:
@@ -301,7 +307,7 @@ Outputs:
     Value: !GetAtt WebAppBucket.WebsiteURL
     Description: Public URL for web dashboard hosted on S3
   WebAppSecureURL:
-    Value: !Sub "https://${WebAppBucket.DomainName}/index.html"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/App/"
     Description: Public URL for web dashboard hosted on S3
   APIEndpoint:
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"

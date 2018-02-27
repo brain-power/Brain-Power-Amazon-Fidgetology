@@ -6,7 +6,7 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
             $scope.Config = response.data;
             $scope.Config.API_ENDPOINT = API_ENDPOINT;
             AWS.config.update({
-                region: $scope.Config.REGION || "us-east-1",
+                region: $scope.Config.AWS_REGION || "us-east-1",
                 credentials: new AWS.CognitoIdentityCredentials({
                     IdentityPoolId: $scope.Config.IdentityPoolId
                 })
