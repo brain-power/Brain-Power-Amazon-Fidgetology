@@ -1,0 +1,47 @@
+<html>
+
+<head>
+    <title>KVS-Rekognition Fidgetology Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="css/main.css" media="screen">
+    <!-- Angular Material Design CSS -->
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.css">
+    <script defer src="js/lib/font-awesome/fontawesome-all.min.js"></script>
+    <!-- Jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <!-- AWS SDK for browser -->
+    <script src="js/lib/aws-sdk/aws-sdk.min.js"></script>
+    <!-- Echarts charting library -->
+    <script src="js/lib/echarts/echarts.min.js"></script>
+    <!-- AngularJS and dependencies -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.js"></script>
+    <script src="js/lib/ng-file-upload/ng-file-upload.min.js"></script>
+    <script src="js/lib/ng-file-upload/ng-file-upload-shim.min.js"></script>
+    <script src="js/app/config.js"></script>
+    <script src="js/app/ng-config.js"></script>
+    <!-- Angular controllers -->
+    <script src="js/app/root-controller.js"></script>
+</head>
+
+<body ng-app="dashboardApp" ng-controller="RootController as ctrl" ng-cloak>
+    <md-content class="md-padding">
+        <md-button ng-click="openUploadDialog($event)" ng-disabled="inProgress" class="md-primary md-raised">
+            Upload Video
+        </md-button>
+        <h3>Config</h3>
+        <div style="font-family:monospace">
+            {{Config}}
+        </div>
+        <h3>Latest Upload</h3>
+        <div style="font-family:monospace">
+            {{latestUpload}}
+        </div>
+    </md-content>
+</body>
+
+</html>
