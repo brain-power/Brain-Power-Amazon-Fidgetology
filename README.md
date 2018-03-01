@@ -12,15 +12,34 @@ TODO
 
 #### Uploading Videos
 
+### Streaming Video from Webcam
+
+#### Browser Support
+
+| Platform | Browser | Notes |
+|----|---------|-------|
+| Windows | Chrome 30+ | Works |
+| Windows | Firefox 20+ | Works |
+| Windows | Edge (latest) | Works |
+| Windows | IE 9+ | **Requires Adobe Flash Player** |
+| Mac OS X | Chrome 30+ | Works |
+| Mac OS X | Firefox 20+ | Works |
+| Mac OS X | Safari 6+ | **Requires Adobe Flash Player** |
+| Android | Chrome (latest) | Works |
+| iOS | Safari/Chrome | Doesn't Work |
+
+
 ### Kinesis Video Stream
 
 ### Rekognition Stream Processor
 
 ## Deploying
 
-Pre-requesites:
+**Pre-requisites**:
  * [AWS-CLI](https://docs.aws.amazon.com/cli/latest/userguide/installing.html) installed. Ensure you have required permissions on your account (most notably: S3 bucket creation/deletion, full access to Rekognition and Kinesis Video Stream. Other resources launched in this project include: Lambda, API Gateway, Kinesis Data Stream)
+
  * (For local development) [Node.js (>= 6)](https://nodejs.org/en/download/) installed.
+ * (For local testing) [FFmpeg](https://github.com/adaptlearning/adapt_authoring/wiki/Installing-FFmpeg) command line installed. 
  
 This project can be deployed using [AWS
 CloudFormation](https://aws.amazon.com/cloudformation/).
