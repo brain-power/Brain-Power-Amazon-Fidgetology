@@ -1,25 +1,31 @@
 app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'Upload', function($scope, $http, $timeout, $mdDialog, Upload) {
     var s3Client,
         kinesis;
-    $http.get(API_ENDPOINT + "/Config")
-        .then(function(response) {
-            $scope.Config = response.data;
-            $scope.Config.API_ENDPOINT = API_ENDPOINT;
-            AWS.config.update({
-                region: $scope.Config.AWS_REGION || "us-east-1",
-                credentials: new AWS.CognitoIdentityCredentials({
-                    IdentityPoolId: $scope.Config.IdentityPoolId
-                })
+
+    $scope.init = function() {
+        $scope.inProgress = true;
+        $http.get(API_ENDPOINT + "/Config")
+            .then(function(response) {
+                $scope.Config = response.data;
+                $scope.Config.API_ENDPOINT = API_ENDPOINT;
+                AWS.config.update({
+                    region: $scope.Config.AWS_REGION || "us-east-1",
+                    credentials: new AWS.CognitoIdentityCredentials({
+                        IdentityPoolId: $scope.Config.IdentityPoolId
+                    })
+                });
+                s3Client = new AWS.S3({
+                    params: { Bucket: $scope.Config.UPLOADS_BUCKET_NAME }
+                });
+                $scope.$broadcast("configLoaded", $scope.Config);
+                kinesis = new AWS.Kinesis();
+                initKinesis();
+                $scope.inProgress = false;
             });
-            s3Client = new AWS.S3({
-                params: { Bucket: $scope.Config.UPLOADS_BUCKET_NAME }
-            });
-            kinesis = new AWS.Kinesis();
-            initKinesis();
-        });
+    }
 
     function initKinesis() {
-        var DEFAULT_RECORDS_LIMIT;
+        var DEFAULT_RECORDS_LIMIT = 20;
         var POLLING_INTERVAL = 500;
         var SHARD_ID = 'shardId-000000000000';
         var getNextShard = function() {
@@ -32,25 +38,30 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
             if (err) return console.error(err);
             $scope.shardIterator = data.NextShardIterator || data.ShardIterator;
             if (data.Records) {
-                DEFAULT_RECORDS_LIMIT = 10;
-                processRecords(data.Records);
+                processRecords(data.Records.slice());
                 $timeout(getNextShard, POLLING_INTERVAL);
             } else {
-                DEFAULT_RECORDS_LIMIT = 1000;
                 getNextShard();
             }
         }
-
-        kinesis.getShardIterator({ ShardIteratorType: 'TRIM_HORIZON', StreamName: $scope.Config.KDS_PROCESSED_STREAM_NAME, ShardId: SHARD_ID }, defaultCallback);
+        kinesis.getShardIterator({ 
+            ShardIteratorType: 'LATEST', 
+            StreamName: $scope.Config.KDS_PROCESSED_STREAM_NAME, 
+            ShardId: SHARD_ID 
+        }, defaultCallback);
     }
 
     function processRecords(records) {
         records.forEach(function(record) {
-            record.data = new TextDecoder("utf-8").decode(record.Data);
-            record.data = JSON.parse(record.data);
+            record.data = JSON.parse(new TextDecoder("utf-8").decode(record.Data));
         });
-        if (records.length)
+        if (records.length && $scope.streamMetadata) {
+            $scope.firstRecordArrived = $scope.firstRecordArrived || new Date().getTime();
+            $scope.streamMetadata.metricsLatency = $scope.firstRecordArrived - $scope.streamStartTime;
+            console.log("Metrics latency", $scope.streamMetadata.metricsLatency);
+            $scope.$broadcast("newRecords", records);
             console.log(records);
+        }
     }
 
     $scope.openUploadDialog = function($event) {
@@ -108,7 +119,40 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
             $scope.closeDialog = function() {
                 $mdDialog.hide();
             };
-
         }
     };
+
+    $scope.toggleWebcamStream = function($event) {
+        $scope.streamMetadata = $scope.streamMetadata || {
+            framerate: '--',
+            bufferSize: '--',
+            postInterval: '--',
+            KVSLatency: '--',
+            payloadSize: '--'
+        };
+        $scope.isStreaming = !$scope.isStreaming;
+
+        $scope.webcam_canvas = $("#webcam_canvas").get(0);
+        var clientWidth = window.innerWidth ||
+            document.documentElement.clientWidth ||
+            document.body.clientWidth;
+        var clientHeight = window.innerHeight ||
+            document.documentElement.clientHeight ||
+            document.body.clientHeight;
+
+        Webcam.on("error", function(err) {
+            //alert(err);
+            //$scope.isStreaming = false;
+            console.log(err);
+        });
+
+        Webcam.set({
+            width: Math.min(640, clientWidth),
+            height: Math.min(640, clientWidth) * 3 / 4,
+            image_format: "jpeg",
+            quality: 80
+        });
+        $scope.$broadcast($scope.isStreaming ? "startStreaming" : "stopStreaming", {});
+    }
+
 }]);

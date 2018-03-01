@@ -3,3 +3,5 @@ dashboard/js/app/config.js
 deploy.sh
 master-template.yaml
 *.log
+tmp/
+.idea/

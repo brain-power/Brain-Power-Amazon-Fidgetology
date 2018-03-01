@@ -18,7 +18,7 @@ Transform: 'AWS::Serverless-2016-10-31'
 Globals:
   Function:
     Timeout: 300 # seconds
-    MemorySize: 2048 # MB
+    MemorySize: 1024 # MB
     Environment:
       Variables:
         KVS_STREAM_NAME: !Sub "${AWS::StackName}-kvs"
@@ -198,6 +198,7 @@ Resources:
       Handler: index.handler
       Runtime: nodejs6.10
       CodeUri: ./lambda/MKVConvert
+      MemorySize: 3000
       Environment:
         Variables:
           FFMPEG_CMD: '-i %i -vcodec copy -an %o'
@@ -229,6 +230,7 @@ Resources:
       Handler: com.brainpower.fidgetology.demo.LambdaFunctionHandler::handleRequest
       Runtime: java8
       CodeUri: ./lambda/S3ToKVS/S3ToKVS.jar
+      MemorySize: 3000
       Policies: 
         - AWSLambdaExecute
         - AmazonKinesisVideoStreamsFullAccess
@@ -275,6 +277,10 @@ Resources:
       Handler: index.handler
       Runtime: nodejs6.10
       CodeUri: ./lambda/WebApi
+      MemorySize: 3000
+      Environment:
+        Variables:
+          FFMPEG_CMD: '-r %r -f image2 -s 640x480 -i %i -vcodec libx264 -crf 25 -pix_fmt yuv420p %o'
       Policies:
         - AWSLambdaExecute
         - AmazonKinesisFullAccess
@@ -301,13 +307,18 @@ Resources:
           Properties:
             Path: /ProcessedStream
             Method: get
+        ProcessDataFrames:
+          Type: Api
+          Properties:
+            Path: /FrameData
+            Method: post
 
 Outputs:
   WebAppURL:
     Value: !GetAtt WebAppBucket.WebsiteURL
     Description: Public URL for web dashboard hosted on S3
   WebAppSecureURL:
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/App/"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/App/index.html"
     Description: Public URL for web dashboard hosted on S3
   APIEndpoint:
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
