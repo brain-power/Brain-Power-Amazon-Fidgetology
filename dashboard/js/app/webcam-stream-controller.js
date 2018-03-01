@@ -5,7 +5,7 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
     var DEFAULT_BUFFER_SIZE = 40;
     var TARGET_FPS = 15;
     var frameBuffer;
-    var shouldUploadFrames = false;
+    var shouldUploadFrames = true;
 
     function stopStreaming() {
         try {
