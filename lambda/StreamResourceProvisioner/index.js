@@ -16,69 +16,74 @@ function initServices() {
 }
 initServices();
 
+// Creates a Kinesis Video Stream and Rekognition Stream Processor when CloudFormation stack is created.
+// Rekognition Stream Processor detects positions of faces in streaming video.
+// Input of Rekognition Stream Processor is the KVS.
+// Output of Rekognition Stream Processor is a KDS.
+// By default, an empty face collection is used to initialize the stream processor.
 function createStreamResources(cb) {
     var streamResources = {};
 
-    function getOrCreateKDS(callback) {
-        const KDS_STREAM_NAME = process.env.KDS_RAW_STREAM_NAME;
-        // Check if KDS exists
-        kinesisdata.describeStream({
-            StreamName: KDS_STREAM_NAME
-        }, function(err, data) {
-            if (err) {
+    function getOrCreateKDS() {
+        return new Promise(function(resolve, reject) {
+            const KDS_STREAM_NAME = process.env.KDS_RAW_STREAM_NAME;
+            // Check if KDS exists
+            kinesisdata.describeStream({
+                StreamName: KDS_STREAM_NAME
+            }, function(err, data) {
+                if (data) return resolve(data);
                 // Stream does not exist
                 console.log("Creating Kinesis Data Stream: " + KDS_STREAM_NAME);
                 return kinesisdata.createStream({
                     StreamName: KDS_STREAM_NAME,
                     ShardCount: 1
                 }, function(err, data) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        kinesisdata.describeStream({
-                            StreamName: KDS_STREAM_NAME
-                        }, callback);
-                    }
+                    if (err) return reject(err);
+                    kinesisdata.describeStream({
+                        StreamName: KDS_STREAM_NAME
+                    }, function(err, data) {
+                        return err ? reject(err) : resolve(data);
+                    });
                 });
-            } else {
-                callback(null, data);
-            }
+            });
         });
     }
 
-    function getOrCreateKVS(callback) {
+    function getOrCreateKVS() {
         const KVS_STREAM_NAME = process.env.KVS_STREAM_NAME;
-        // Check if KVS exists
-        kinesisvideo.describeStream({
-            StreamName: KVS_STREAM_NAME
-        }, function(err, data) {
-            if (err) {
+        return new Promise(function(resolve, reject) {
+            // Check if KVS exists
+            kinesisvideo.describeStream({
+                StreamName: KVS_STREAM_NAME
+            }, function(err, data) {
+                if (data) return resolve(data);
+                // Stream does not exist
                 console.log("Creating Kinesis Video Stream: " + KVS_STREAM_NAME);
                 return kinesisvideo.createStream({
                     StreamName: KVS_STREAM_NAME,
                     DataRetentionInHours: 24,
                     MediaType: 'video/h264'
                 }, function(err, data) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        kinesisvideo.describeStream({
-                            StreamName: KVS_STREAM_NAME
-                        }, callback);
-                    }
+                    if (err) return reject(err);
+                    kinesisvideo.describeStream({
+                        StreamName: KVS_STREAM_NAME
+                    }, function(err, data) {
+                        return err ? reject(err) : resolve(data);
+                    });
                 });
-            } else {
-                callback(null, data);
-            }
+            });
         });
     }
 
-    function getOrCreateRekStreamProcessor(callback) {
+    function getOrCreateRekStreamProcessor() {
         const STREAM_PROCESSOR_NAME = process.env.REK_STREAM_PROCESSOR_NAME;
-        rekognition.describeStreamProcessor({
-            Name: STREAM_PROCESSOR_NAME
-        }, function(err, data) {
-            if (err) {
+        return new Promise(function(resolve, reject) {
+            // Check if Stream processor exists
+            rekognition.describeStreamProcessor({
+                Name: STREAM_PROCESSOR_NAME
+            }, function(err, data) {
+                if (data) return resolve(data);
+                // Stream processor does not exist
                 console.log("Creating Rekognition stream processor: " + STREAM_PROCESSOR_NAME);
                 return rekognition.createStreamProcessor({
                     Input: { KinesisVideoStream: { Arn: streamResources.KVS.StreamARN } },
@@ -87,49 +92,41 @@ function createStreamResources(cb) {
                     RoleArn: process.env.REK_ROLE_ARN,
                     Settings: { FaceSearch: { FaceMatchThreshold: process.env.REK_FACE_MATCH_THRESHOLD || 90, CollectionId: process.env.REK_FACE_COLLECTION } }
                 }, function(err, data) {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        rekognition.describeStreamProcessor({
-                            Name: STREAM_PROCESSOR_NAME
-                        }, callback);
-                    }
-                });
-            } else {
-                callback(null, data);
-            }
-        });
-    }
-
-    getOrCreateKVS(function(err, data) {
-        if (err) return cb(err, streamResources);
-        streamResources.KVS = data.StreamInfo;
-        getOrCreateKDS(function(err, data) {
-            if (err) return cb(err, streamResources);
-            streamResources.KDS = data.StreamDescription;
-            // Create empty face collection for Rekognition stream processor
-            rekognition.createCollection({
-                CollectionId: process.env.REK_FACE_COLLECTION
-            }, function() {
-                getOrCreateRekStreamProcessor(function(err, data) {
-                    if (err) {
-                        return cb(err, streamResources);
-                    }
-                    streamResources.RekStreamProcessor = data;
-                    rekognition.startStreamProcessor({
-                        Name: data.Name
-                    }, function(err, data) {
-                        if (err) {
-                            console.log(err);
-                        }
+                    if (err) return reject(err);
+                    rekognition.describeStreamProcessor({
+                        Name: STREAM_PROCESSOR_NAME
+                    }, function(err, data){
+                       return err ? reject(err) : resolve(data);
                     });
-                    cb(null, streamResources);
                 });
             });
         });
-    });
+    }
+
+    getOrCreateKVS().then(function(data) {
+        streamResources.KVS = data.StreamInfo;
+        getOrCreateKDS().then(function(data) {
+            streamResources.KDS = data.StreamDescription;
+            rekognition.createCollection({
+                CollectionId: process.env.REK_FACE_COLLECTION
+            }, function(err, data) {
+              getOrCreateRekStreamProcessor().then(function(data) {
+                streamResources.RekStreamProcessor = data;
+                rekognition.startStreamProcessor({
+                    Name: streamResources.RekStreamProcessor.Name
+                }, function(err, data) {
+                    if (err) {
+                        console.log(err);
+                    }
+                    cb(null, streamResources);
+                });
+              }).catch(cb);
+            });
+        }).catch(cb);
+    }).catch(cb);
 }
 
+// Deletes all stream resources when stack is deleted.
 function deleteStreamResources(cb) {
 
     function deleteStreamProcessor(_cb) {
@@ -224,10 +221,10 @@ function sendResponse(event, callback, logStreamName, responseStatus, responseDa
 }
 
 exports.handler = (event, context, callback) => {
-    //console.log('Received event:', JSON.stringify(event, null, 2));
     try {
         var responseData;
         if (event.RequestType === 'Delete') {
+            // Stack is being deleted, tear down all stream resources.
             deleteStreamResources(function(err) {
                 if (err) {
                     console.log(err);
@@ -236,7 +233,7 @@ exports.handler = (event, context, callback) => {
             });
             return;
         }
-
+        // Otherwise, stack is being created or updated. Create resources if they do not exist.
         createStreamResources(function(err, resources) {
             if (err) {
                 console.log(err);
@@ -249,5 +246,4 @@ exports.handler = (event, context, callback) => {
     } catch (e) {
         sendResponse(event, callback, context.logStreamName, 'FAILED', { Error: e });
     }
-
 };
