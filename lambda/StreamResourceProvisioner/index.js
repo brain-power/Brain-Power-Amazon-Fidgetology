@@ -129,54 +129,57 @@ function createStreamResources(cb) {
 // Deletes all stream resources when stack is deleted.
 function deleteStreamResources(cb) {
 
-    function deleteStreamProcessor(_cb) {
-        rekognition.stopStreamProcessor({
-            Name: process.env.REK_STREAM_PROCESSOR_NAME
-        }, function(err, data) {
-            if (data) {
-                console.log("Stopped Rekognition stream processor");
-            }
-            rekognition.deleteStreamProcessor({
+    function deleteStreamProcessor() {
+        return new Promise(function(resolve) {
+            rekognition.stopStreamProcessor({
                 Name: process.env.REK_STREAM_PROCESSOR_NAME
             }, function(err, data) {
                 if (data) {
-                    console.log("Deleted Rekognition stream processor");
+                    console.log("Stopped Rekognition stream processor");
                 }
-                rekognition.deleteCollection({
-                    CollectionId: process.env.REK_FACE_COLLECTION
+                rekognition.deleteStreamProcessor({
+                        Name: process.env.REK_STREAM_PROCESSOR_NAME
                 }, function(err, data) {
                     if (data) {
-                        console.log("Deleted Face Collection");
+                        console.log("Deleted Rekognition stream processor");
                     }
-                    _cb();
+                    rekognition.deleteCollection({
+                        CollectionId: process.env.REK_FACE_COLLECTION
+                    }, function(err, data) {
+                        if (data) {
+                            console.log("Deleted Face Collection");
+                        }
+                        resolve();
+                    });
                 });
             });
         });
     }
 
-    function deleteKVS(_cb) {
-        kinesisvideo.describeStream({
-            StreamName: process.env.KVS_STREAM_NAME
-        }, function(err, data) {
-            if (data && data.StreamInfo) {
-                kinesisvideo.deleteStream({
-                    StreamARN: data.StreamInfo.StreamARN
-                }, function(err, _data) {
-                    if (_data) {
-                        console.log("Deleted KVS: " + data.StreamInfo.StreamARN);
-                    }
-                    _cb();
-                });
-            } else {
-                _cb();
-            }
-        });
+    function deleteKVS() {
+        return new Promise(function(resolve) {
+            kinesisvideo.describeStream({
+                StreamName: process.env.KVS_STREAM_NAME
+            }, function(err, data) {
+                if (data && data.StreamInfo) {
+                    kinesisvideo.deleteStream({
+                        StreamARN: data.StreamInfo.StreamARN
+                    }, function(err, _data) {
+                        if (_data) {
+                            console.log("Deleted KVS: " + data.StreamInfo.StreamARN);
+                        }
+                        resolve();
+                    });
+                } else {
+                    resolve();
+                }
+            });
+        })
     }
 
-    deleteStreamProcessor(function() {
-        deleteKVS(cb);
-    });
-
+    deleteStreamProcessor().then(function() {
+        deleteKVS().then(cb).catch(cb);
+    }).catch(cb);
 }
 
 // Sends a response to the pre-signed S3 URL
