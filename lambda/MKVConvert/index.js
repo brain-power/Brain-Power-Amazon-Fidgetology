@@ -9,7 +9,6 @@ const MKV_MIME_TYPE = "video/x-matroska";
 const MKV_UPLOADS_PREFIX = "mkv_uploads/";
 
 exports.handler = (event, context, callback) => {
-
     // Get the object from the S3 upload event
     const bucket = event.Records[0].s3.bucket.name;
     const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
@@ -17,13 +16,13 @@ exports.handler = (event, context, callback) => {
         Bucket: bucket,
         Key: key
     };
+    console.log(bucket, key);
     var filename = key.substring(key.lastIndexOf("/") + 1);
     var filetype = key.split(".").pop();
     s3.getObject(params, function(err, data) {
         if (err) {
             return callback(err);
         }
-        console.log(data.ContentType, key);
         data.Key = params.Key;
         data.Bucket = params.Bucket;
         var outputFilename = filename.replace("." + filetype, MKV_FILE_EXT);
@@ -40,27 +39,31 @@ exports.handler = (event, context, callback) => {
                 console.log(e);
                 return callback(e);
             }
-
             // Download object to temp location
             stream.write(data.Body);
             stream.end();
-
-            var outputLocation = "/tmp/" + outputFilename;
-
-            // Convert to .MKV file for ingestion by KVS
-            var convertJob = ffmpeg(
-                (process.env.FFMPEG_CMD)
-                .replace("%i", tempWriteLocation)
-                .replace("%o", outputLocation)
-            ).then(function() {
-               params.Body = fs.createReadStream(outputLocation);
-               params.ContentType = MKV_MIME_TYPE;
-               s3.putObject(params, function(err, data) {
-                if (err) return callback(err);
-                callback(null, "Success.");
-               });
+            stream.on("finish", function() {
+                console.log("Download complete.");
+                var outputLocation = "/tmp/" + outputFilename;
+                // Convert to .MKV file for ingestion by KVS
+                var convertJob = ffmpeg(
+                    (process.env.FFMPEG_CMD)
+                    .replace("%i", tempWriteLocation)
+                    .replace("%o", outputLocation)
+                ).then(function() {
+                   console.log("File conversion complete.")
+                   params.Body = fs.createReadStream(outputLocation);
+                   params.ContentType = MKV_MIME_TYPE;
+                   s3.putObject(params, function(err, data) {
+                    try {
+                        fs.unlink(outputLocation);
+                    } catch(e) {}
+                    if (err) return callback(err);
+                    console.log("Upload complete.");
+                    callback(null, "Success.");
+                   });
+                });
             });
-
         } else {
             params.Body = data.Body;
             params.ContentType = data.ContentType;

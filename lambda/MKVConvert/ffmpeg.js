@@ -39,12 +39,27 @@ var os = require('os'),
       return makeExecutable(targetPath);
     });
   },
-  findUnpackedBinary = function () {
+  findUnpackedBinary = function (targetPath) {
     'use strict';
-    return exists(path.join(os.tmpdir(), 'ffmpeg')).catch(unzip);
+    return exists(targetPath).catch(unzip);
   };
 
 module.exports = function ffmpeg(commandStr) {
   'use strict';
-  return findUnpackedBinary().then(function (commandPath) { return cp.exec(commandPath + " " + commandStr); }).catch(console.log);
+  var binaryPath = path.resolve(path.join(__dirname, 'vendor/ffmpeg'));
+  var targetPath = path.join(os.tmpdir(), 'ffmpeg');
+  return new Promise(function(resolve, reject) {
+    fs.access(targetPath, function(err) {
+        if (!err) {
+          cp.exec(targetPath + " " + commandStr).then(resolve).catch(reject);
+        } else {
+          cp.exec("cp " + binaryPath + " " + targetPath)
+            .then(function() {
+              return makeExecutable(targetPath).then(function(commandPath) { cp.exec(commandPath + " " + commandStr).then(resolve).catch(reject); });
+            }).catch(function() {
+              return findUnpackedBinary(targetPath).then(function(commandPath) { cp.exec(commandPath + " " + commandStr).then(resolve).catch(reject); });
+            });
+        }
+      });
+  });
 };
