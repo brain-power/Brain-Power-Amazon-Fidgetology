@@ -18,6 +18,10 @@ TODO
 
 ## Deploying
 
+Pre-requesites:
+ * [AWS-CLI](https://docs.aws.amazon.com/cli/latest/userguide/installing.html) installed. Ensure you have required permissions on your account (most notably: S3 bucket creation/deletion, full access to Rekognition and Kinesis Video Stream. Other resources launched in this project include: Lambda, API Gateway, Kinesis Data Stream)
+ * (For local development) [Node.js (>= 6)](https://nodejs.org/en/download/) installed.
+ 
 This project can be deployed using [AWS
 CloudFormation](https://aws.amazon.com/cloudformation/).
 
@@ -32,9 +36,9 @@ You can deploy the required AWS resources and demo web app all in one go using t
 
 This command will:
  * Package code artifacts (Lambda function source files) and upload to a bootstrapping S3 bucket.
- * Generate a `template-master.yaml` CloudFormation stack that is then deployed to your AWS account.
+ * Generate a `master-template.yaml` CloudFormation stack that is then deployed to your AWS account.
  * Configure the dashboard web app with required API routes, and upload static website files to be hosted from an S3 bucket.
- * Output the public URL to the demo web app hosted in the S3 bucket. 
+ * Output the public URL of the demo web app hosted in the S3 bucket. 
  
 ## Usage
 
@@ -43,7 +47,7 @@ This command will:
 After deploying the CloudFormation stack, the web app can be tested locally.
 
 Before you run the local development server, you need to install the
-development dependencies with the command:
+Node.js development dependencies with the command:
 ```shell
 npm install
 ```
@@ -63,4 +67,4 @@ To avoid incurring charges on your AWS account after testing out the web app, ru
 ./delete_stack.sh
 ```
 
-This will tear down all AWS resources that were provisioned with the CloudFormation stack, delete all videos that were uploaded using the web app, and delete the bucket hosting the web app.
+This will tear down all AWS resources that were provisioned with the CloudFormation stack, delete all videos that were uploaded/streamed using the web app, and delete the bucket hosting the web app.
