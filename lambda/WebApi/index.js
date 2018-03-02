@@ -115,6 +115,9 @@ var processFrameData = (event, context, callback) => {
             s3.putObject(s3Params, function(err, data) {
                 try {
                     fs.unlink(outputLocation);
+                    persistedFrames.forEach((file) => {
+                       fs.unlink(file);
+                    })
                 } catch (e) {}
                 if (err) {
                     console.log(err);
