@@ -4,6 +4,7 @@ const s3 = new aws.S3();
 const ffmpeg = require('./ffmpeg');
 const fs = require("fs");
 const path = require("path");
+const cp = require("./child-process-promise");
 
 const createResponse = (statusCode, body) => {
     body = (typeof body === "string") ? body : JSON.stringify(body);
@@ -70,16 +71,17 @@ var renderStatic = (event, context, callback) => {
 // POST /FrameData
 var processFrameData = (event, context, callback) => {
     var payload = event.body;
-    console.log("Received %f frames at %s FPS".replace("%f", payload.frames.length).replace("%s", payload.framerate));
+    if (!payload.framerate) {
+        return callback(null, createResponse(400, "Unknown framerate."));
+    }
+    console.log(`Received ${payload.frames.length} frames at ${payload.framerate} FPS`);
     var frames = payload.frames;
+    var timestamps = payload.timestamps || [new Date().getTime(), new Date().getTime() + (payload.frames.length - 1) * payload.framerate];
     var pad = function(number, size) {
         var s = String(number);
         while (s.length < (size || 2)) { s = "0" + s; }
         return s;
     };
-    if (!payload.framerate) {
-        return callback(null, createResponse(200, "Unknown framerate."));
-    }
     const TMP_DIR = process.env.local ? "./tmp" : "/tmp";
     const RANDOM_KEY = Math.floor(Math.pow(10, 8) * Math.random()).toString();
     const FRAME_PREFIX = RANDOM_KEY + "-frame-";
@@ -89,9 +91,10 @@ var processFrameData = (event, context, callback) => {
 
     // Write all image frames to temp filestore.
     var promises = frames.filter((frame) => {
+        // Get rid of empty frames.
         return !!frame;
     }).map((frame, index) => {
-        // strip off the data: url prefix to get just the base64-encoded bytes
+        // Strip off the data:url prefix to get just the base64-encoded bytes.
         var data = frame.replace(/^data:image\/\w+;base64,/, "");
         var buf = new Buffer(data, 'base64');
         return new Promise(function(resolve, reject) {
@@ -110,14 +113,18 @@ var processFrameData = (event, context, callback) => {
                 Bucket: process.env.UPLOADS_BUCKET_NAME,
                 Body: fs.createReadStream(outputLocation),
                 Key: "mkv_uploads/" + outputFilename,
-                ContentType: MKV_MIME_TYPE
+                ContentType: MKV_MIME_TYPE,
+                Metadata: {
+                    'PRODUCER_START_TIMESTAMP': timestamps[0].toString(),
+                    'PRODUCER_END_TIMESTAMP': timestamps[timestamps.length - 1].toString()
+                }
             };
             s3.putObject(s3Params, function(err, data) {
                 try {
                     fs.unlink(outputLocation);
                     persistedFrames.forEach((file) => {
-                       fs.unlink(file);
-                    })
+                        fs.unlink(file);
+                    });
                 } catch (e) {}
                 if (err) {
                     console.log(err);
@@ -132,13 +139,11 @@ var processFrameData = (event, context, callback) => {
             .replace("%i", path.resolve(path.join(TMP_DIR, FRAME_PREFIX + "%0" + PAD_LENGTH.toString() + "d.jpg")));
         if (process.env.local) {
             ffmpegCmd = "ffmpeg " + ffmpegCmd;
-            require("child_process").exec(ffmpegCmd, function(err) {
-                if (err) {
+            cp.exec(ffmpegCmd).then(uploadToS3)
+                .catch(function(err) {
                     console.log(err);
                     return callback(null, createResponse(500, err));
-                }
-                uploadToS3();
-            });
+                });
         } else {
             ffmpeg(ffmpegCmd).then(uploadToS3);
         }
