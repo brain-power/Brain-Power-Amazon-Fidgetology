@@ -1,8 +1,27 @@
 #!/bin/bash
 
+# Default stack name
 STACK_NAME="bp-fidgetology-demo"
 
+# Only regions with both Kinesis Video Stream and Rekognition service are supported
+SUPPORTED_REGIONS=("us-west-2" "us-east-1")
+
 ###### Do not modify below ######
+
+containsElement () {
+	local e match="$1"
+	shift
+	for e; do [[ "$e" == "$match" ]] && IS_VALID_REGION='y' && return; done
+	return
+}
+
+REGION=$(aws configure get region)
+containsElement "${REGION}" "${SUPPORTED_REGIONS[@]}"
+
+if [ -z "$IS_VALID_REGION" ]; then
+	echo "Deployment in region ${REGION} is not supported. Supported regions are: [ ${SUPPORTED_REGIONS[*]} ]. Please re-configure your default region using the AWS CLI before deploying."
+	exit 1
+fi
 
 ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
 BOOTSTRAP_BUCKET_NAME="${STACK_NAME}-bootstrap-${ACCOUNT_ID}"
@@ -22,4 +41,4 @@ echo "var API_ENDPOINT = '${API_ENDPOINT}'" > "dashboard/js/app/config.js"
 aws s3 sync dashboard/ s3://${WEBAPP_BUCKET}
 
 printf "\n===================================================================\n"
-printf "Deployment completed. Visit the following link to demo the web app:\n${WEBAPP_URL}"
+printf "Deployment completed. Visit the following link to demo the web app:\n${WEBAPP_URL}\n"
