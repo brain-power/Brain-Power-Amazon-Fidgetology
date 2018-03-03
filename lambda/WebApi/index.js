@@ -127,7 +127,7 @@ const processFrameData = (event, context, callback) => {
                         console.log(err);
                         return callback(null, createResponse(500, err));
                     }
-                    callback(null, createResponse(200, persistedFrames));
+                    callback(null, createResponse(200, mkvData.persistedFrames));
                 });
             }
             uploadToS3();

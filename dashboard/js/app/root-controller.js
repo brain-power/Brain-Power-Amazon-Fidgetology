@@ -21,6 +21,8 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
                 kinesis = new AWS.Kinesis();
                 initKinesis();
                 $scope.inProgress = false;
+            }).catch(function() {
+                $scope.inProgress = false;
             });
     }
 

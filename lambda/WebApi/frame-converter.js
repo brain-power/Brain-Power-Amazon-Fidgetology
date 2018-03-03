@@ -3,8 +3,12 @@ const PAD_LENGTH = 3;
 const MKV_FILE_EXT = ".mkv";
 const ffmpeg = require("./ffmpeg");
 const cp = require("./child-process-promise");
+const path = require("path");
+const fs = require("fs");
 
 exports.convertFramesToMKVFragment = function(frameDataArray, params) {
+    const RANDOM_KEY = Math.floor(Math.pow(10, 8) * Math.random()).toString();
+    const FRAME_PREFIX = RANDOM_KEY + "-frame-";
     return new Promise(function(resolve, reject) {
         var fileWritePromises = frameDataArray.filter((frameData) => {
             // Get rid of empty frames.
@@ -20,8 +24,6 @@ exports.convertFramesToMKVFragment = function(frameDataArray, params) {
                     while (s.length < (size || 2)) { s = "0" + s; }
                     return s;
                 };
-                const RANDOM_KEY = Math.floor(Math.pow(10, 8) * Math.random()).toString();
-                const FRAME_PREFIX = RANDOM_KEY + "-frame-";
                 var filename = path.join(TMP_DIR, FRAME_PREFIX + pad(index, PAD_LENGTH) + ".jpg");
                 // e.g. frames will be written to /tmp/XXXXX-frame-000.jpg, /tmp/XXXXX-frame-001.jpg, ...
                 fs.writeFile(filename, buf, function(err) {
