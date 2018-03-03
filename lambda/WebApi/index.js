@@ -6,7 +6,9 @@ const fs = require("fs");
 const path = require("path");
 const cp = require("./child-process-promise");
 const mime = require("./mime");
+const frameConverter = require("./frame-converter");
 
+// Helper for creating JSON response.
 const createResponse = (statusCode, body) => {
     body = (typeof body === "string") ? body : JSON.stringify(body);
     return {
@@ -20,6 +22,7 @@ const createResponse = (statusCode, body) => {
     };
 };
 
+// Helper for sending static files.
 const sendFile = (body, contentType) => {
     return {
         statusCode: 200,
@@ -32,7 +35,7 @@ const sendFile = (body, contentType) => {
 };
 
 // GET /Config
-var getConfig = (event, context, callback) => {
+const getConfig = (event, context, callback) => {
     callback(null, createResponse(200, {
         UPLOADS_BUCKET_NAME: process.env.UPLOADS_BUCKET_NAME,
         KDS_RAW_STREAM_NAME: process.env.KDS_RAW_STREAM_NAME,
@@ -52,7 +55,7 @@ var readProcessedStream = (event, context, callback) => {
 };
 
 // GET /App/path/to/resource
-var renderStatic = (event, context, callback) => {
+const renderStatic = (event, context, callback) => {
     var resourcePath = event.path.replace(/\/App\/?/, "");
     if (resourcePath.indexOf(".") === -1) {
         resourcePath += "index.html";
@@ -70,92 +73,71 @@ var renderStatic = (event, context, callback) => {
 };
 
 // POST /FrameData
-var processFrameData = (event, context, callback) => {
+// @param event.body
+// {
+//   "frames": [ frameData_1, frameData_2, ..., frameData_N ], // where frameData_i is base64-encoded string of the ith frame of image sequence.
+//      e.g. "data:image(jpeg|png);base64,----"; a web browser client can generate this frame data by calling 
+//     `canvas.toDataURL('image/jpeg')` on a canvas element that a webcam video feed (or any video source) is being streamed to.
+//   
+//   "framerate": Integer, // estimated framerate of image sequence computed by client.
+//
+//   "timestamps": [ timestamp_1, timestamp_2, ..., timestamp_N ], // producer timestamps that image frames were generated at in UTC milliseconds,
+//      i.e. timestamp_i is the time that frameData_i was generated in client browser. The first timestamp will be used as the
+//      ProducerTimestamp parameter in /putMedia request when converted stream fragment is published to Kinesis Video Stream.
+// }
+const processFrameData = (event, context, callback) => {
     var payload = event.body;
     if (!payload.framerate) {
         return callback(null, createResponse(400, "Unknown framerate."));
     }
+    if (!payload.frames || !payload.frames.length) {
+        return callback(null, createResponse(400, "Frame data does not exist."));
+    }
+    if (payload.frames.length <= 2) {
+        return callback(null, createResponse(400, "Not enough frame data."));
+    }
     console.log(`Received ${payload.frames.length} frames at ${payload.framerate} FPS`);
-    var frames = payload.frames;
-    var timestamps = payload.timestamps || [new Date().getTime(), new Date().getTime() + (payload.frames.length - 1) * payload.framerate];
-    var pad = function(number, size) {
-        var s = String(number);
-        while (s.length < (size || 2)) { s = "0" + s; }
-        return s;
-    };
-    const TMP_DIR = process.env.local ? "./tmp" : "/tmp";
-    const RANDOM_KEY = Math.floor(Math.pow(10, 8) * Math.random()).toString();
-    const FRAME_PREFIX = RANDOM_KEY + "-frame-";
-    const PAD_LENGTH = 3;
-    const MKV_MIME_TYPE = "video/x-matroska";
-    const MKV_FILE_EXT = ".mkv";
 
-    // Write all image frames to temp filestore.
-    var promises = frames.filter((frame) => {
-        // Get rid of empty frames.
-        return !!frame;
-    }).map((frame, index) => {
-        // Strip off the data:url prefix to get just the base64-encoded bytes.
-        var data = frame.replace(/^data:image\/\w+;base64,/, "");
-        var buf = new Buffer(data, 'base64');
-        return new Promise(function(resolve, reject) {
-            var filename = path.join(TMP_DIR, FRAME_PREFIX + pad(index, PAD_LENGTH) + ".jpg");
-            fs.writeFile(filename, buf, function(err) {
-                if (err) reject(err);
-                else resolve(filename);
-            });
-        });
-    });
-    Promise.all(promises).then(function(persistedFrames) {
-        var outputFilename = "_" + new Date().getTime() + MKV_FILE_EXT;
-        var outputLocation = path.resolve(path.join(TMP_DIR, outputFilename));
-        var uploadToS3 = function() {
-            var s3Params = {
-                Bucket: process.env.UPLOADS_BUCKET_NAME,
-                Body: fs.createReadStream(outputLocation),
-                Key: "mkv_uploads/" + outputFilename,
-                ContentType: MKV_MIME_TYPE,
-                Metadata: {
-                    'PRODUCER_START_TIMESTAMP': timestamps[0].toString(),
-                    'PRODUCER_END_TIMESTAMP': timestamps[timestamps.length - 1].toString()
-                }
-            };
-            s3.putObject(s3Params, function(err, data) {
-                try {
-                    fs.unlink(outputLocation);
-                    persistedFrames.forEach((file) => {
-                        fs.unlink(file);
-                    });
-                } catch (e) {}
-                if (err) {
-                    console.log(err);
-                    return callback(null, createResponse(500, err));
-                }
-                callback(null, createResponse(200, persistedFrames));
-            });
-        };
-        var ffmpegCmd = (process.env.FFMPEG_CMD)
-            .replace("%o", outputLocation)
-            .replace("%r", process.env.FFMPEG_FRAME_RATE || 15)
-            .replace("%i", path.resolve(path.join(TMP_DIR, FRAME_PREFIX + "%0" + PAD_LENGTH.toString() + "d.jpg")));
-        if (process.env.local) {
-            ffmpegCmd = "ffmpeg " + ffmpegCmd;
-            cp.exec(ffmpegCmd).then(uploadToS3)
-                .catch(function(err) {
-                    console.log(err);
-                    return callback(null, createResponse(500, err));
+    // (infer timestamps from framerate if none provided)
+    var timestamps = payload.timestamps || [new Date().getTime(), new Date().getTime() + Math.round(1000 * (payload.frames.length - 1) / payload.framerate)]; 
+
+    frameConverter.convertFramesToMKVFragment(payload.frames, { framerate: payload.framerate })
+        .then(function(mkvData) {
+            function uploadToS3() {
+                // Uploads and archives MKV fragment to S3
+                var s3Params = {
+                    Bucket: process.env.UPLOADS_BUCKET_NAME,
+                    Body: fs.createReadStream(mkvData.outputFileLocation),
+                    Key: "mkv_uploads/" + mkvData.outputFilename,
+                    ContentType: "video/x-matroska",
+                    Metadata: {
+                        
+                    }
+                };
+                s3Params.Metadata[process.env.PRODUCER_START_TIMESTAMP_KEY] = timestamps[0].toString();
+                s3.putObject(s3Params, function(err, data) {
+                    try {
+                        // Deletes all temp files created by this process once S3 upload completes.
+                        fs.unlink(mkvData.outputFileLocation);
+                        mkvData.persistedFrames.forEach((file) => {
+                            fs.unlink(file);
+                        });
+                    } catch (e) {}
+                    if (err) {
+                        console.log(err);
+                        return callback(null, createResponse(500, err));
+                    }
+                    callback(null, createResponse(200, persistedFrames));
                 });
-        } else {
-            ffmpeg(ffmpegCmd).then(uploadToS3);
-        }
-    }).catch(function(err) {
-        console.log(err);
-        callback(null, createResponse(500, err));
-    });
+            }
+            uploadToS3();
+        }).catch(function(err) {
+            callback(null, createResponse(500, err));
+        });
 };
 
 // Local mirror for testing.
-exports.processFrameData = function(req, res) {
+exports.processFrameData = (req, res) => {
     var event = {
         body: req.body
     };
@@ -165,6 +147,7 @@ exports.processFrameData = function(req, res) {
     });
 };
 
+// Handler for all API Gateway requests.
 exports.handler = (event, context, callback) => {
     event.body = JSON.parse(event.body);
     if (/Config/.test(event.path)) {
