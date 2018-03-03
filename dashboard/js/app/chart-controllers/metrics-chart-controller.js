@@ -1,0 +1,279 @@
+app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filter', function($scope, $http, $timeout, $filter) {
+    var $ = angular.element;
+    var recordsBuffer = [];
+
+    $scope.metricsConfigs = [{
+        displayName: "Face Pose",
+        plottingFactors: ["Pose.Pitch", "Pose.Roll", "Pose.Yaw"],
+        yAxisLabel: "Face  Pose  Angle  ( ° )",
+        yMax: 90,
+        yMin: -90,
+        units: "°"
+    }, {
+        displayName: "Face Rotational Movement",
+        plottingFactors: ["RotationalVelocity"],
+        thresholds: [15, 30, 45, 60],
+        yAxisLabel: "Change  in  Head  Orientation  (deg / sec)",
+        yMax: 75,
+        yMin: 0,
+        units: "deg/sec"
+    }, {
+        displayName: "Face Translational Movement",
+        plottingFactors: ["TranslationalVelocity"],
+        thresholds: [0.05, 0.075, 0.10, 0.20],
+        yAxisLabel: "Velocity  of  Face Center  (proportion of frame / sec)",
+        yMax: 0.3,
+        yMin: 0
+    }];
+
+    $scope.plottingHistorySettings = [{
+        interval: 30 * 1000, // in milliseconds
+        displayName: '30s'
+    }, {
+        interval: 60 * 1000,
+        displayName: '1m'
+    }, {
+        interval: 3 * 60 * 1000,
+        displayName: '3m'
+    }, {
+        interval: 5 * 60 * 1000,
+        displayName: '5m'
+    }];
+    $scope.threshold_colors = ["#009966", "#ffde33", "#ff9933", "#cc0033", "#660099"];
+
+    $scope.selectedMetric = $scope.metricsConfigs[0];
+    $scope.selectedPlotHistory = $scope.plottingHistorySettings[0];
+
+    var flatten = function(obj, name, stem) {
+        var merge = function(objects) {
+            var out = {};
+            for (var i = 0; i < objects.length; i++) {
+                for (var p in objects[i]) {
+                    out[p] = objects[i][p];
+                }
+            }
+            return out;
+        };
+        var out = {};
+        var newStem = (typeof stem !== 'undefined' && stem !== '') ? stem + '.' + name : name;
+        if (typeof obj !== 'object') {
+            out[newStem] = obj;
+            return out;
+        }
+        for (var p in obj) {
+            var prop = flatten(obj[p], p, newStem);
+            out = merge([out, prop]);
+        }
+        return out;
+    };
+
+    function getTimeLabel(tMillis, relative) {
+        var date = new Date(Math.round(tMillis));
+        return relative ? $filter('date')(date, 'm:ss') : $filter('date')(date, "h:mm:ss a");
+    }
+
+    $scope.init = function() {
+        var initChart = function() {
+            $scope.raw_metrics_echart = echarts.init($("#chart-metrics-raw").get(0));
+            $scope.raw_metrics_chart_opts = {
+                textStyle: {
+                    fontFamily: 'Ubuntu',
+                    fontSize: 16
+                },
+                title: {
+                    text: $scope.selectedMetric.displayName,
+                    left: 'center',
+                    textStyle: {
+                        fontFamily: 'Ubuntu'
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(_params) {
+                        var ret = "";
+                        var timestamp = _params[0].axisValue;
+                        var startTime = ($scope.streamMetadata || {}).startTimestamp || 0;
+                        var timeDisplay = getTimeLabel(timestamp - startTime, startTime);
+                        ret = "<b><i class='fa fa-clock'></i>&nbsp;Session Time - " + timeDisplay + "</b>";
+                        ret += "<br>";
+                        _params.forEach(function(params) {
+                            ret += "<br>";
+                            ret += "<span style='color:%c;'><i class='fa fa-circle'></i></span>&nbsp; &nbsp;" + params.seriesName + "&nbsp; &nbsp;<b>" +
+                                params.value + "&nbsp;" + $scope.selectedMetric.units + "</b>";
+                            ret = ret.replace("%c", params.color);
+                        });
+                        return ret;
+                    }
+                },
+                xAxis: {
+                    data: [],
+                    name: $scope.selectedMetric.xAxisLabel || "Time",
+                    nameLocation: 'center',
+                    nameGap: 35,
+                    axisLabel: {
+                        formatter: function(value) {
+                            if (typeof value !== 'string' || parseInt(value))
+                                return getTimeLabel(parseInt(value));
+                            return value;
+                        },
+                        fontSize: 15
+                    },
+                    nameTextStyle: {
+                        fontWeight: 'bold'
+                    }
+                },
+                yAxis: {
+                    max: isNaN($scope.selectedMetric.yMax) ? 'dataMax' : $scope.selectedMetric.yMax,
+                    min: isNaN($scope.selectedMetric.yMin) ? 'dataMin' : $scope.selectedMetric.yMin,
+                    splitLine: {
+                        show: true
+                    },
+                    name: $scope.selectedMetric.yAxisLabel || "",
+                    nameLocation: 'center',
+                    nameGap: 50,
+                    nameRotate: 90,
+                    axisLabel: {
+                        fontSize: 15
+                    },
+                    nameTextStyle: {
+                        fontWeight: 'bold'
+                    }
+                },
+                toolbox: {
+                    left: '8%',
+                    feature: {
+                        dataZoom: {
+                            title: {
+                                zoom: 'Area zooming',
+                                back: 'Restore area zooming'
+                            },
+                            yAxisIndex: 'none'
+                        },
+                        restore: {
+                            title: 'Restore'
+                        },
+                        saveAsImage: {
+                            title: 'Save image'
+                        }
+                    }
+                }
+            }
+        };
+        $timeout(initChart, 100);
+    };
+
+    var handleNewRecords = function(event, records) {
+        records.forEach(function(record, index) {
+            var face = record.data.FaceSearchResponse[0].DetectedFace;
+            record.data.FaceSearchResponse[0].DetectedFace = flatten(face);
+            Object.keys(record.data.InputInformation.KinesisVideo).forEach(function(key) {
+                record.data.FaceSearchResponse[0].DetectedFace[key] = record.data.InputInformation.KinesisVideo[key];
+            });
+        });
+        recordsBuffer = recordsBuffer.concat(records);
+        if (chartUpdateLocked) return;
+        var facesData = records.map(function(record) {
+            return record.data.FaceSearchResponse[0].DetectedFace;
+        });
+        var plotOptions = getPlotOptions(facesData);
+        $scope.raw_metrics_chart_opts.xAxis.data = plotOptions.xAxis.data || $scope.raw_metrics_chart_opts.xAxis.data;
+        $scope.raw_metrics_chart_opts.series = plotOptions.series || $scope.raw_metrics_chart_opts.series;
+        $scope.raw_metrics_echart.setOption($scope.raw_metrics_chart_opts);
+        console.log($scope.latestMetricTimestamp);
+    };
+
+    var getPlotOptions = function(facesData) {
+        var opts = {
+            series: [],
+            xAxis: {}
+        };
+        var previousSeries = $scope.raw_metrics_chart_opts.series || [];
+        var previousTimestamps = $scope.raw_metrics_chart_opts.xAxis.data || [];
+        var recentFaceData = facesData.filter(function(face) {
+            return 1000 * (face.ProducerTimestamp + face.RecordIndex) > ($scope.latestMetricTimestamp || 0)
+        });
+        $scope.selectedMetric.plottingFactors.forEach(function(factor, index) {
+            var previousData = (previousSeries[index] || {}).data || [];
+            var seriesItem = {
+                name: factor,
+                type: 'line',
+                data: previousData.concat(recentFaceData.map(function(face) { return face[factor]; })),
+                symbolSize: 7,
+                itemStyle: {
+                    normal: {
+                        lineStyle: {
+                            width: 2
+                        }
+                    },
+                    emphasis: {
+                        lineStyle: {
+                            width: 4
+                        }
+                    }
+                }
+            };
+            opts.series.push(seriesItem);
+        });
+        opts.xAxis.data = previousTimestamps.concat(recentFaceData.map(function(face) { return Math.round(1000 * (face.ProducerTimestamp + face.RecordIndex)); }));
+        $scope.latestMetricTimestamp = opts.xAxis.data[opts.xAxis.data.length - 1];
+        while (opts.xAxis.data[0] < $scope.latestMetricTimestamp - $scope.selectedPlotHistory.interval) {
+            opts.xAxis.data.shift();
+            opts.series.forEach(function(series) {
+                series.data.shift();
+            });
+        }
+        return opts;
+    };
+
+    var chartUpdateLocked = false;
+
+    $scope.plotHistoryChanged = function() {
+        chartUpdateLocked = true;
+        console.log("New plotting history", $scope.selectedPlotHistory);
+        $scope.raw_metrics_chart_opts.xAxis.data = recordsBuffer.map(function(record) {
+            var face = record.data.FaceSearchResponse[0].DetectedFace;
+            return Math.round(1000 * (face.ProducerTimestamp + face.RecordIndex));
+        });
+        $scope.raw_metrics_chart_opts.series = $scope.selectedMetric.plottingFactors.map(function(factor) {
+            return {
+                name: factor,
+                type: 'line',
+                data: recordsBuffer.map(function(record) {
+                    return record.data.FaceSearchResponse[0].DetectedFace[factor]
+                }),
+                symbolSize: 7,
+                itemStyle: {
+                    normal: {
+                        lineStyle: {
+                            width: 2
+                        }
+                    },
+                    emphasis: {
+                        lineStyle: {
+                            width: 4
+                        }
+                    }
+                }
+            }
+        });
+        $scope.latestMetricTimestamp = $scope.raw_metrics_chart_opts.xAxis.data[$scope.raw_metrics_chart_opts.xAxis.data.length - 1];
+        while ($scope.raw_metrics_chart_opts.xAxis.data[0] < $scope.latestMetricTimestamp - $scope.selectedPlotHistory.interval) {
+            $scope.raw_metrics_chart_opts.xAxis.data.shift();
+            $scope.raw_metrics_chart_opts.series.forEach(function(series) {
+                series.data.shift();
+            });
+        }
+        $scope.raw_metrics_echart.setOption($scope.raw_metrics_chart_opts);
+        chartUpdateLocked = false;
+    };
+
+    $scope.metricChanged = function() {
+        chartUpdateLocked = true;
+        console.log("Plotting metric changed", $scope.selectedMetric);
+        $scope.plotHistoryChanged();
+        chartUpdateLocked = false;
+    };
+
+    $scope.$on("newRecords", handleNewRecords);
+
+}]);

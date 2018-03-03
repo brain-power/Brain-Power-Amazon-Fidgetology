@@ -1,13 +1,14 @@
-app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'Upload', function($scope, $http, $timeout, $mdDialog, Upload) {
+app.controller('RootController', ['$scope', '$http', '$timeout', '$interval', '$mdDialog', 'Upload', function($scope, $http, $timeout, $interval, $mdDialog, Upload) {
     var s3Client,
-        kinesis;
+        kinesisClient;
 
     $scope.init = function() {
         $scope.inProgress = true;
-        $http.get(API_ENDPOINT + "/Config")
+        var _API_ENDPOINT = (API_ENDPOINT || "/Prod");
+        $http.get(_API_ENDPOINT + "/Config")
             .then(function(response) {
                 $scope.Config = response.data;
-                $scope.Config.API_ENDPOINT = API_ENDPOINT;
+                $scope.Config.API_ENDPOINT = _API_ENDPOINT;
                 AWS.config.update({
                     region: $scope.Config.AWS_REGION || "us-east-1",
                     credentials: new AWS.CognitoIdentityCredentials({
@@ -18,52 +19,54 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
                     params: { Bucket: $scope.Config.UPLOADS_BUCKET_NAME }
                 });
                 $scope.$broadcast("configLoaded", $scope.Config);
-                kinesis = new AWS.Kinesis();
-                initKinesis();
+                kinesisClient = new AWS.Kinesis();
+                initKinesisPolling();
                 $scope.inProgress = false;
             });
-    }
+    };
 
-    function initKinesis() {
-        var DEFAULT_RECORDS_LIMIT = 20;
-        var POLLING_INTERVAL = 500;
-        var SHARD_ID = 'shardId-000000000000';
+    function initKinesisPolling() {
+        var DEFAULT_RECORDS_LIMIT = 20; // max records to retrieve per request
+        var POLLING_INTERVAL = 500; // milliseconds
+        var SHARD_ID = 'shardId-000000000000'; // app publishes to only one shard
+        var shardIterator;
         var getNextShard = function() {
-            kinesis.getRecords({
+            kinesisClient.getRecords({
                 Limit: DEFAULT_RECORDS_LIMIT,
-                ShardIterator: $scope.shardIterator
+                ShardIterator: shardIterator
             }, defaultCallback);
-        }
+        };
         var defaultCallback = function(err, data) {
             if (err) return console.error(err);
-            $scope.shardIterator = data.NextShardIterator || data.ShardIterator;
+            shardIterator = data.NextShardIterator || data.ShardIterator;
             if (data.Records) {
-                processRecords(data.Records.slice());
+                prepareRecords(data.Records.slice());
                 $timeout(getNextShard, POLLING_INTERVAL);
             } else {
                 getNextShard();
             }
-        }
-        kinesis.getShardIterator({ 
-            ShardIteratorType: 'LATEST', 
-            StreamName: $scope.Config.KDS_PROCESSED_STREAM_NAME, 
-            ShardId: SHARD_ID 
+        };
+        kinesisClient.getShardIterator({
+            ShardIteratorType: 'LATEST',
+            StreamName: $scope.Config.KDS_PROCESSED_STREAM_NAME,
+            ShardId: SHARD_ID
         }, defaultCallback);
     }
 
-    function processRecords(records) {
+    function prepareRecords(records) {
         records.forEach(function(record) {
+            // Decode base64-encoded records.
             record.data = JSON.parse(new TextDecoder("utf-8").decode(record.Data));
         });
-        if (records.length && $scope.streamMetadata) {
-            $scope.firstRecordArrived = $scope.firstRecordArrived || new Date().getTime();
-            $scope.streamMetadata.metricsLatency = $scope.firstRecordArrived - $scope.streamStartTime;
-            console.log("Metrics latency", $scope.streamMetadata.metricsLatency);
+        if (records.length) {
             $scope.$broadcast("newRecords", records);
-            console.log(records);
+            //console.log("Fragment Number", records[0].data.InputInformation.KinesisVideo.FragmentNumber);
+            //console.log("Producer Timestamp", new Date(records[0].data.InputInformation.KinesisVideo.ProducerTimestamp * 1000));
+            //console.log("Frame Timestamp", new Date(Math.round(records[0].data.FaceSearchResponse[0].DetectedFace.Timestamp * 1000)));
+            //console.log(records.length + " Records");
         }
     }
-
+    $scope.staticVideo = [];
     $scope.openUploadDialog = function($event) {
         window.scrollTo(0, 0);
         $scope.Upload = Upload;
@@ -74,16 +77,19 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
             locals: {
                 metadata: $scope.metadata || {},
                 Upload: $scope.Upload,
+                staticVideo: $scope.staticVideo
             },
             controller: UploadVideoDialogController
         });
 
-        function UploadVideoDialogController($scope, $mdDialog, metadata, Upload) {
+        function UploadVideoDialogController($scope, $mdDialog, metadata, Upload, staticVideo) {
             $scope.metadata = metadata;
             $scope.Upload = Upload;
+            $scope.staticVideo = staticVideo;
             $scope.uploadVideo = function(file, callback) {
                 $scope.uploadSuccess = undefined;
                 $scope.uploadError = undefined;
+                $scope.uploadStatus = "Uploading to S3 ...";
                 s3Client.putObject({
                     Key: "raw_uploads/" + new Date().getTime() + "_" + file.name,
                     Body: file,
@@ -92,8 +98,10 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
                     if (err) {
                         return callback(err);
                     }
-                    $scope.latestUpload = data;
-                    callback(null, data);
+                    $scope.uploadStatus = "Converting to streamable MKV fragments ...";
+                    $timeout(function() {
+                        callback(null, data);
+                    }, 5000);
                 });
             };
 
@@ -103,12 +111,15 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
                     $scope.inProgress = true;
                     $scope.uploadVideo($scope.file, function(err, response) {
                         if (err) {
-                            $scope.inProgress = false;
+                            $scope.error = "Error occurred during video upload.";
                             console.error(err);
-                            return;
+                        } else {
+                            $scope.closeDialog();
+                            staticVideo.pop();
+                            staticVideo.push($scope.file);
+                            $scope.$apply();
                         }
                         $scope.inProgress = false;
-                        $scope.closeDialog();
                     });
                 } else {
                     $scope.inProgress = false;
@@ -122,6 +133,7 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
         }
     };
 
+    $scope.streamMetadata = null;
     $scope.toggleWebcamStream = function($event) {
         $scope.streamMetadata = $scope.streamMetadata || {
             framerate: '--',
@@ -152,7 +164,12 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$mdDialog', 'U
             image_format: "jpeg",
             quality: 80
         });
+
         $scope.$broadcast($scope.isStreaming ? "startStreaming" : "stopStreaming", {});
-    }
+    };
+
+    $interval(function() {
+        $scope.currentTime = new Date().getTime();
+    }, 1000);
 
 }]);

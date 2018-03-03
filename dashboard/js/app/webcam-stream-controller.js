@@ -21,6 +21,7 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
             frameBuffer.clear();
         }
         $scope.streamMetadata.lastPost = null;
+        $scope.streamMetadata.startTimestamp = null;
     }
 
     function startStreaming() {
@@ -28,7 +29,7 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
             $scope.streamMetadata.bufferSize = DEFAULT_BUFFER_SIZE;
         }
         if (!frameBuffer) {
-            frameBuffer = new CanvasBuffer({
+            frameBuffer = new FrameBuffer({
                 size: $scope.streamMetadata.bufferSize
             });
         }
@@ -46,7 +47,7 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
     }
 
     var frameCallback = function(imgData) {
-        if (!$scope.isStreaming) { return; }
+        if (!$scope.isStreaming) return;
         frameBuffer.addFrame(imgData);
         if ($scope.streamMetadata.bufferSize &&
             frameBuffer.getSize() >= $scope.streamMetadata.bufferSize) {
@@ -63,25 +64,25 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
                     $scope.streamMetadata.inProgress = false;
                 }).catch(console.error);
             }
-            $scope.streamMetadata.payloadSize = Number((JSON.stringify(data).length / 10 ** 6).toFixed(2)) + " MB";
+            $scope.streamMetadata.payloadSize = Number((JSON.stringify(data).length / Math.pow(10, 6)).toFixed(2)) + " MB";
         }
-    }
+    };
 
     function startStreamLoop() {
         var lastTimestamp;
         var looper = function() {
             if (lastTimestamp) {
                 var dtMillis = new Date().getTime() - lastTimestamp;
-                var framerate = Number((1000 / dtMillis).toFixed(1));
-                $scope.streamMetadata.framerate = framerate;
+                $scope.streamMetadata.framerate = Number((1000 / dtMillis).toFixed(1));
             }
             if ($scope.isStreaming) {
                 Webcam.snap(frameCallback);
                 lastTimestamp = new Date().getTime();
                 looperPromise = setTimeout(looper, 1000 / TARGET_FPS);
             }
-        }
+        };
         looper();
+        $scope.streamMetadata.startTimestamp = new Date().getTime();
     }
 
     $scope.$on("stopStreaming", stopStreaming);
