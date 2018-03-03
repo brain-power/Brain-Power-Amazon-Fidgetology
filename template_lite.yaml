@@ -218,7 +218,6 @@ Resources:
           FFMPEG_CMD: '-r %r -f image2 -s 640x480 -i %i -vcodec libx264 -crf 25 -pix_fmt yuv420p %o'
       Policies:
         - AWSLambdaExecute
-        - AmazonKinesisFullAccess
         - Version: '2012-10-17'
           Statement:
             - Effect: Allow
