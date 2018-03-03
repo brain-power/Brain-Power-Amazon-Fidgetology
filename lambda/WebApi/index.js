@@ -5,6 +5,7 @@ const ffmpeg = require('./ffmpeg');
 const fs = require("fs");
 const path = require("path");
 const cp = require("./child-process-promise");
+const mime = require("./mime");
 
 const createResponse = (statusCode, body) => {
     body = (typeof body === "string") ? body : JSON.stringify(body);
@@ -63,7 +64,7 @@ var renderStatic = (event, context, callback) => {
         if (err) {
             callback(null, createResponse(400, err));
         } else {
-            callback(null, sendFile(data.Body, data.ContentType));
+            callback(null, sendFile(data.Body, require('./mime').getType(data.Key)));
         }
     });
 };
