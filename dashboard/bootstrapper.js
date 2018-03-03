@@ -108,6 +108,7 @@ function sendResponse(event, callback, logStreamName, responseStatus, responseDa
     req.end();
 }
 
+// Called when stack is Created, Updated, or Deleted.
 exports.handler = (event, context, callback) => {
     try {
         var responseData;
@@ -115,11 +116,13 @@ exports.handler = (event, context, callback) => {
             // Stack is being deleted, delete web app bucket and video stream fragments.
             deleteBucket(process.env.WEBAPP_BUCKET_NAME)
                 .catch(console.log)
-                .finally(deleteBucket(process.env.UPLOADS_BUCKET_NAME)
-                    .catch(console.log)
-                    .finally(function() {
-                        sendResponse(event, callback, context.logStreamName, 'SUCCESS');
-                    }));
+                .finally(function() {
+                    deleteBucket(process.env.UPLOADS_BUCKET_NAME)
+                        .catch(console.log)
+                        .finally(function() {
+                            sendResponse(event, callback, context.logStreamName, 'SUCCESS');
+                        });
+                });
             return;
         }
         // Otherwise, stack is being created or updated. Sync dashboard files.
