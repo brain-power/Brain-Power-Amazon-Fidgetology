@@ -22,6 +22,8 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$interval', '$
                 kinesisClient = new AWS.Kinesis();
                 initKinesisPolling();
                 $scope.inProgress = false;
+            }).catch(function() {
+                $scope.inProgress = false;
             });
     };
 

@@ -22,6 +22,7 @@ Globals:
     Environment:
       Variables:
         KVS_STREAM_NAME: !Ref KVSStreamName
+        PRODUCER_START_TIMESTAMP_KEY: "producer_start_timestamp"
         KDS_RAW_STREAM_NAME: !Ref RawDataStream
         KDS_PROCESSED_STREAM_NAME: !Ref ProcessedDataStream
         REK_STREAM_PROCESSOR_NAME: !Sub "${AWS::StackName}-rek-stream-processor"
