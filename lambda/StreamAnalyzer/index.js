@@ -46,8 +46,8 @@ exports.handler = (event, context, callback) => {
     // Do post-processing on detected faces.
     faceRecords.forEach((record, index) => {
         var faceSearchResponse = record.data.FaceSearchResponse[0];
+        faceSearchResponse.DetectedFace.RecordIndex = index;
         processDetectedFace(faceSearchResponse.DetectedFace, record.data.InputInformation.KinesisVideo);
-        record.data.processsed = true;
     });
 
     for (var i = 1; i < faceRecords.length; i++) {
@@ -61,7 +61,7 @@ exports.handler = (event, context, callback) => {
 
         var deltaPosition = Math.sqrt(Math.pow((currentFaceCenterX - previousFaceCenterX), 2) + Math.pow((currentFaceCenterY - previousFaceCenterY), 2));
         var deltaTime = currentFace.Timestamp - previousFace.Timestamp;
-        currentFace.tVelocity = (deltaPosition / deltaTime);
+        currentFace.TranslationalVelocity = (deltaPosition / deltaTime);
 
         var currentFacePitch = currentFace.Pose.Pitch;
         var currentFaceYaw = currentFace.Pose.Yaw;
@@ -72,12 +72,12 @@ exports.handler = (event, context, callback) => {
         var previousFaceRoll = previousFace.Pose.Roll;
 
         var deltaRotation = Math.sqrt((Math.pow((currentFacePitch - previousFacePitch), 2) + Math.pow((currentFaceYaw - previousFaceYaw), 2) + Math.pow((currentFaceRoll - previousFaceRoll), 2)) / 3);
-        currentFace.rVelocity = (deltaRotation / deltaTime);
+        currentFace.RotationalVelocity = (deltaRotation / deltaTime);
     }
 
     if (faceRecords.length >= 2) {
-        faceRecords[0].data.FaceSearchResponse[0].DetectedFace.tVelocity = faceRecords[1].data.FaceSearchResponse[0].DetectedFace.tVelocity;
-        faceRecords[0].data.FaceSearchResponse[0].DetectedFace.rVelocity = faceRecords[1].data.FaceSearchResponse[0].DetectedFace.rVelocity;
+        faceRecords[0].data.FaceSearchResponse[0].DetectedFace.TranslationalVelocity = faceRecords[1].data.FaceSearchResponse[0].DetectedFace.TranslationalVelocity;
+        faceRecords[0].data.FaceSearchResponse[0].DetectedFace.RotationalVelocity = faceRecords[1].data.FaceSearchResponse[0].DetectedFace.RotationalVelocity;
         putProcessedRecordsIntoStream(faceRecords).then(function() {
             var firstFace = faceRecords[0];
             var lastFace = faceRecords[faceRecords.length - 1];
