@@ -103,7 +103,7 @@ Click the button to begin the stack creation process:
 
 1. Click **Next**, and specify **bp-fidgetology-demo** as both the **Stack name** and **Change set name**. Accept all default parameters and click **Next**.
 2. Click **Next** again to get to the final Review page. Under *Capabilities*, confirm acknowledgement that new IAM resources will be created. Click **Create change set**.
-3. On the next page, wait for the stack to 'finish computing'. Then click **Execute** (top-right corner of page) to start the stack deployment. Refresh the CloudFormation page to find your newly created stack, and click on it. You can now monitor the deployment process, which should take no more than 3 minutes.
+3. On the next page, wait for the stack to finish 'Computing changes'. Then click **Execute** (top-right corner of page) to start the stack deployment. Confirm, and refresh the CloudFormation page to find your newly created stack. Click on it to monitor the deployment process, which should take no more than 3 minutes.
 4. Once deployment is complete, launch the demo web app by visiting the **WebAppSecureURL** link listed under *Outputs*.
 
 By default, the CloudFormation template
