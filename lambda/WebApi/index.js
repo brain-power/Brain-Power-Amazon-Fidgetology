@@ -42,6 +42,7 @@ const getConfig = (event, context, callback) => {
         KDS_PROCESSED_STREAM_NAME: process.env.KDS_PROCESSED_STREAM_NAME,
         KVS_STREAM_NAME: process.env.KVS_STREAM_NAME,
         AWS_REGION: process.env.AWS_REGION,
+        PRODUCER_START_TIMESTAMP_KEY: process.env.PRODUCER_START_TIMESTAMP_KEY,
         IdentityPoolId: process.env.IdentityPoolId
     }));
 };

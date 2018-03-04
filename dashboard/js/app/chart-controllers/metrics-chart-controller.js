@@ -8,14 +8,16 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         yAxisLabel: "Face  Pose  Angle  ( ° )",
         yMax: 90,
         yMin: -90,
-        units: "°"
+        units: "°",
+        precision: 1
     }, {
         displayName: "Face Rotational Movement",
         plottingFactors: ["RotationalVelocity"],
-        thresholds: [15, 30, 45, 60],
+        thresholds: [10, 20, 30, 45],
         yAxisLabel: "Change  in  Head  Orientation  (deg / sec)",
-        yMax: 75,
+        yMax: 60,
         yMin: 0,
+        precision: 0,
         units: "deg/sec"
     }, {
         displayName: "Face Translational Movement",
@@ -23,7 +25,8 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         thresholds: [0.05, 0.075, 0.10, 0.20],
         yAxisLabel: "Velocity  of  Face Center  (proportion of frame / sec)",
         yMax: 0.3,
-        yMin: 0
+        yMin: 0,
+        precision: 2
     }];
 
     $scope.plottingHistorySettings = [{
@@ -42,7 +45,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
     $scope.threshold_colors = ["#009966", "#ffde33", "#ff9933", "#cc0033", "#660099"];
 
     $scope.selectedMetric = $scope.metricsConfigs[0];
-    $scope.selectedPlotHistory = $scope.plottingHistorySettings[0];
+    $scope.selectedPlotHistory = $scope.plottingHistorySettings[1];
 
     var flatten = function(obj, name, stem) {
         var merge = function(objects) {
@@ -92,14 +95,14 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                     formatter: function(_params) {
                         var ret = "";
                         var timestamp = _params[0].axisValue;
-                        var startTime = ($scope.streamMetadata || {}).startTimestamp || 0;
+                        var startTime = ($scope.streamMetadata || {}).startTimestamp || ($scope.staticVideo[0] || {}).startTimestamp || 0;
                         var timeDisplay = getTimeLabel(timestamp - startTime, startTime);
                         ret = "<b><i class='fa fa-clock'></i>&nbsp;Session Time - " + timeDisplay + "</b>";
                         ret += "<br>";
                         _params.forEach(function(params) {
                             ret += "<br>";
                             ret += "<span style='color:%c;'><i class='fa fa-circle'></i></span>&nbsp; &nbsp;" + params.seriesName + "&nbsp; &nbsp;<b>" +
-                                params.value + "&nbsp;" + $scope.selectedMetric.units + "</b>";
+                                params.value.toFixed($scope.selectedMetric.precision || 1) + "&nbsp;" + $scope.selectedMetric.units + "</b>";
                             ret = ret.replace("%c", params.color);
                         });
                         return ret;
@@ -178,8 +181,8 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         var plotOptions = getPlotOptions(facesData);
         $scope.raw_metrics_chart_opts.xAxis.data = plotOptions.xAxis.data || $scope.raw_metrics_chart_opts.xAxis.data;
         $scope.raw_metrics_chart_opts.series = plotOptions.series || $scope.raw_metrics_chart_opts.series;
+        $scope.raw_metrics_chart_opts.visualMap = plotOptions.visualMap || $scope.raw_metrics_chart_opts.visualMap;
         $scope.raw_metrics_echart.setOption($scope.raw_metrics_chart_opts);
-        console.log($scope.latestMetricTimestamp);
     };
 
     var getPlotOptions = function(facesData) {
@@ -190,7 +193,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         var previousSeries = $scope.raw_metrics_chart_opts.series || [];
         var previousTimestamps = $scope.raw_metrics_chart_opts.xAxis.data || [];
         var recentFaceData = facesData.filter(function(face) {
-            return 1000 * (face.ProducerTimestamp + face.RecordIndex) > ($scope.latestMetricTimestamp || 0)
+            return (1000 * face.Timestamp) > ($scope.latestMetricTimestamp || 0);
         });
         $scope.selectedMetric.plottingFactors.forEach(function(factor, index) {
             var previousData = (previousSeries[index] || {}).data || [];
@@ -210,11 +213,23 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                             width: 4
                         }
                     }
+                },
+                markLine: {
+                    silent: true,
+                    lineStyle: {
+                        normal: {
+                            color: 'black'
+                        }
+                    },
+                    data: ($scope.selectedMetric.thresholds || []).map(function(v) {
+                        return { yAxis: v };
+                    })
                 }
             };
             opts.series.push(seriesItem);
         });
-        opts.xAxis.data = previousTimestamps.concat(recentFaceData.map(function(face) { return Math.round(1000 * (face.ProducerTimestamp + face.RecordIndex)); }));
+        opts.xAxis.data = previousTimestamps.concat(recentFaceData.map(function(face) { return Math.ceil(1000 * face.Timestamp); }));
+        opts.visualMap = $scope.selectedMetric.thresholds ? getVisualMapPieces() : null;
         $scope.latestMetricTimestamp = opts.xAxis.data[opts.xAxis.data.length - 1];
         while (opts.xAxis.data[0] < $scope.latestMetricTimestamp - $scope.selectedPlotHistory.interval) {
             opts.xAxis.data.shift();
@@ -224,6 +239,37 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         }
         return opts;
     };
+
+    var getVisualMapPieces = function() {
+        return {
+            top: 10,
+            right: 10,
+            itemGap: 5,
+            itemWidth: 15,
+            itemHeight: 0.75 * 14,
+            precision: isNaN($scope.selectedMetric.precision) ? 1 : $scope.selectedMetric.precision,
+            pieces: [{
+                gt: 0,
+                lte: $scope.selectedMetric.thresholds[0],
+                color: $scope.threshold_colors[0]
+            }, {
+                gt: $scope.selectedMetric.thresholds[0],
+                lte: $scope.selectedMetric.thresholds[1],
+                color: $scope.threshold_colors[1]
+            }, {
+                gt: $scope.selectedMetric.thresholds[1],
+                lte: $scope.selectedMetric.thresholds[2],
+                color: $scope.threshold_colors[2]
+            }, {
+                gt: $scope.selectedMetric.thresholds[2],
+                lte: $scope.selectedMetric.thresholds[3],
+                color: $scope.threshold_colors[3]
+            }, {
+                gt: $scope.selectedMetric.thresholds[3],
+                color: $scope.threshold_colors[4]
+            }]
+        }
+    }
 
     var chartUpdateLocked = false;
 

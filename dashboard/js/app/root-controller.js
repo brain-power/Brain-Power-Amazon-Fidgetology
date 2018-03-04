@@ -22,6 +22,7 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$interval', '$
                 kinesisClient = new AWS.Kinesis();
                 initKinesisPolling();
                 $scope.inProgress = false;
+                console.log($scope.Config)
             }).catch(function() {
                 $scope.inProgress = false;
             });
@@ -79,31 +80,40 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$interval', '$
             locals: {
                 metadata: $scope.metadata || {},
                 Upload: $scope.Upload,
-                staticVideo: $scope.staticVideo
+                staticVideo: $scope.staticVideo,
+                Config: $scope.Config
             },
             controller: UploadVideoDialogController
         });
 
-        function UploadVideoDialogController($scope, $mdDialog, metadata, Upload, staticVideo) {
+        function UploadVideoDialogController($scope, $mdDialog, metadata, Upload, staticVideo, Config) {
             $scope.metadata = metadata;
             $scope.Upload = Upload;
             $scope.staticVideo = staticVideo;
+            $scope.Config = Config;
             $scope.uploadVideo = function(file, callback) {
                 $scope.uploadSuccess = undefined;
                 $scope.uploadError = undefined;
                 $scope.uploadStatus = "Uploading to S3 ...";
-                s3Client.putObject({
+                var s3Params = {
                     Key: "raw_uploads/" + new Date().getTime() + "_" + file.name,
                     Body: file,
-                    ContentType: file.type
-                }, function(err, data) {
+                    ContentType: file.type,
+                    Metadata: {
+
+                    }
+                }
+                var delay = 0;
+                file.startTimestamp = (new Date().getTime() + delay * 1000);
+                s3Params.Metadata[$scope.Config.PRODUCER_START_TIMESTAMP_KEY] = file.startTimestamp.toString();
+                s3Client.putObject(s3Params, function(err, data) {
                     if (err) {
                         return callback(err);
                     }
                     $scope.uploadStatus = "Converting to streamable MKV fragments ...";
                     $timeout(function() {
                         callback(null, data);
-                    }, 5000);
+                    }, 5 * 1000);
                 });
             };
 

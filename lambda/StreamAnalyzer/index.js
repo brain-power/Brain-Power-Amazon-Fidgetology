@@ -9,7 +9,7 @@ function processDetectedFace(face, time) {
     var centerX = face.BoundingBox.Left + face.BoundingBox.Width / 2;
     var centerY = face.BoundingBox.Top + face.BoundingBox.Height / 2;
     face.BoundingBox.Center = [centerX, centerY];
-    face.Timestamp = time.FrameOffsetInSeconds + time.ProducerTimestamp;
+    face.Timestamp = Math.min(time.ProducerTimestamp + time.FrameOffsetInSeconds, time.ProducerTimestamp + face.RecordIndex);
 }
 
 function putProcessedRecordsIntoStream(records) {
