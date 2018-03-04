@@ -5,10 +5,10 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
     $scope.metricsConfigs = [{
         displayName: "Face Pose",
         plottingFactors: ["Pose.Pitch", "Pose.Roll", "Pose.Yaw"],
-        yAxisLabel: "Face  Pose  Angle  ( ° )",
+        yAxisLabel: "Face  Pose  Angle  ( deg )",
         yMax: 90,
         yMin: -90,
-        units: "°",
+        units: "deg",
         precision: 1
     }, {
         displayName: "Face Rotational Movement",

@@ -2,8 +2,8 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
 
     var looperPromise;
 
-    var DEFAULT_BUFFER_SIZE = 40;
-    var TARGET_FPS = 15;
+    var DEFAULT_BUFFER_SIZE = 50;
+    var TARGET_FPS = 12;
     var frameBuffer;
     var shouldUploadFrames = true;
 
