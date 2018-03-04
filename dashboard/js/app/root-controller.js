@@ -4,7 +4,12 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$interval', '$
 
     $scope.init = function() {
         $scope.inProgress = true;
-        var _API_ENDPOINT = (API_ENDPOINT || "/Prod");
+        var _API_ENDPOINT;
+        try {
+            _API_ENDPOINT = (API_ENDPOINT || "/Prod");
+        } catch (e) {
+            _API_ENDPOINT = "/Prod";
+        }
         $http.get(_API_ENDPOINT + "/Config")
             .then(function(response) {
                 $scope.Config = response.data;
@@ -19,10 +24,12 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$interval', '$
                     params: { Bucket: $scope.Config.UPLOADS_BUCKET_NAME }
                 });
                 $scope.$broadcast("configLoaded", $scope.Config);
-                kinesisClient = new AWS.Kinesis();
-                initKinesisPolling();
+                if ($scope.Config.KDS_PROCESSED_STREAM_NAME) {
+                    kinesisClient = new AWS.Kinesis();
+                    initKinesisPolling();
+                }
                 $scope.inProgress = false;
-                console.log($scope.Config)
+                console.log($scope.Config);
             }).catch(function() {
                 $scope.inProgress = false;
             });

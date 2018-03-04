@@ -46,19 +46,20 @@ function uploadWebAppFiles(cb) {
 function deleteBucket(bucket) {
     return new Promise(function(resolve, reject) {
         s3.listObjects({ Bucket: bucket }, function(err, data) {
-            if (err) return reject(err);
+            if (err) return resolve(err);
+            var objects = data.Contents.map((obj) => { return { Key: obj.Key } });
             s3.deleteObjects({
                 Bucket: bucket,
                 Delete: {
-                    Objects: data.Contents.map((obj) => { return { Key: obj.Key } })
+                    Objects: objects
                 }
             }, function(err, data) {
-                if (err) return reject(err);
+                if (err && objects.length > 0) return resolve(err);
                 console.log(`Deleted ${bucket} bucket objects.`);
                 s3.deleteBucket({
                     Bucket: bucket
                 }, function(err, data) {
-                    if (err) return reject(err);
+                    if (err) return resolve(err);
                     console.log(`Deleted ${bucket} bucket.`);
                     resolve(data);
                 });
@@ -114,16 +115,13 @@ exports.handler = (event, context, callback) => {
         var responseData;
         if (event.RequestType === 'Delete') {
             // Stack is being deleted, delete web app bucket and video stream fragments.
-            deleteBucket(process.env.WEBAPP_BUCKET_NAME)
-                .catch(console.log)
-                .finally(function() {
+            return deleteBucket(process.env.WEBAPP_BUCKET_NAME)
+                .then(function(data) {
                     deleteBucket(process.env.UPLOADS_BUCKET_NAME)
-                        .catch(console.log)
-                        .finally(function() {
+                        .then(function(data) {
                             sendResponse(event, callback, context.logStreamName, 'SUCCESS');
                         });
                 });
-            return;
         }
         // Otherwise, stack is being created or updated. Sync dashboard files.
         uploadWebAppFiles(function(err, resources) {
@@ -137,6 +135,7 @@ exports.handler = (event, context, callback) => {
             sendResponse(event, callback, context.logStreamName, err ? 'FAILED' : 'SUCCESS', responseData);
         });
     } catch (e) {
+        console.log(e);
         sendResponse(event, callback, context.logStreamName, 'FAILED', { Error: e });
     }
 };

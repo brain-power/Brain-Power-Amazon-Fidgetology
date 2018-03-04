@@ -138,23 +138,20 @@ Resources:
               Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/${AWS::StackName}*"
             - Effect: Allow
               Action:
+                - s3:ListBucket
+                - s3:DeleteBucket
+              Resource: 
+                - !Sub "arn:aws:s3:::${AWS::StackName}-webapp-${AWS::AccountId}"
+                - !Sub "arn:aws:s3:::${AWS::StackName}-uploads-${AWS::AccountId}"
+            - Effect: Allow
+              Action:
+                - s3:GetObject
                 - s3:PutObject
-                - s3:ListBucket
+                - s3:ListObjects
                 - s3:DeleteObject
-              Resource: !Sub "arn:aws:s3:::${AWS::StackName}-webapp-${AWS::AccountId}/*"
-            - Effect: Allow
-              Action:
-                - s3:DeleteBucket
-              Resource: !Sub "arn:aws:s3:::${AWS::StackName}-webapp-${AWS::AccountId}"
-            - Effect: Allow
-              Action:
-                - s3:ListBucket
-                - s3:DeleteObject
-              Resource: !Sub "arn:aws:s3:::${AWS::StackName}-uploads-${AWS::AccountId}/*"
-            - Effect: Allow
-              Action:
-                - s3:DeleteBucket
-              Resource: !Sub "arn:aws:s3:::${AWS::StackName}-uploads-${AWS::AccountId}"
+              Resource: 
+                - !Sub "arn:aws:s3:::${AWS::StackName}-webapp-${AWS::AccountId}/*"
+                - !Sub "arn:aws:s3:::${AWS::StackName}-uploads-${AWS::AccountId}/*"
 
   WebAppBootstrapper:
     Type: Custom::WebAppBootstrapper # Custom resource definition

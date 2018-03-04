@@ -36,7 +36,7 @@ aws cloudformation deploy --template-file master-template.yaml --stack-name ${ST
 # then comment out the two commands above and uncomment the two commands below.
 
 # aws cloudformation package --template-file template_lite.yaml --s3-bucket ${BOOTSTRAP_BUCKET_NAME} --output-template-file packaged-template_lite.yaml
-# aws cloudformation package --template-file packaged-template_lite.yaml --stack-name ${STACK_NAME} -- capabilities CAPABILITY_IAM
+# aws cloudformation deploy --template-file packaged-template_lite.yaml --stack-name ${STACK_NAME} --capabilities CAPABILITY_IAM
 
 API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name ${STACK_NAME} --output text --query 'Stacks[0].Outputs[?OutputKey==`APIEndpoint`].OutputValue')
 WEBAPP_BUCKET=$(aws cloudformation describe-stack-resources --stack-name ${STACK_NAME} --logical-resource-id WebAppBucket --output text --query 'StackResources[0].PhysicalResourceId') 
