@@ -114,4 +114,4 @@ function stopStreaming() {
 
 #### Server-side integration
 
-For details on how image data sent by client should be processed on server-side see documentation in [lambda/WebApi](../lambda/WebApi/README.md)
+For details on how image data sent by client should be processed on server-side see documentation in [lambda/WebApi](../lambda/WebApi/README.md#post-framedata)
