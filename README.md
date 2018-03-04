@@ -6,7 +6,7 @@ Repository for demo app + code artifacts associated with [blog post](blog/README
 
 This is a Serverless Web application for streaming webcam feed from browser to Kinesis Video Streams and Rekognition Video. Body motion metrics can be then be visualized in web app with minimal delay.
 
-Services used:
+AWS Technologies used:
 * Kinesis Video Streams
 * Rekognition Video
 * Kinesis Data Streams
@@ -51,15 +51,15 @@ Most notably, it currently works on the latest version of all major browsers and
 
 When static video or buffered webcam frames are uploaded in the web app, a Lambda function converts them to streamable MKV files (currently, [MKV is the only file container supported by Kinesis Video Stream](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/how-data.html#how-data-frame)).
 
-* If the source is a *static video upload*, then the [lambda/MKVConverter](lambda/MKVConverter/index.js) function is triggered directly by an S3 upload event. An FFmpeg subprocess is used for file conversion. 
+* If the source is a *static video upload*, then the [`lambda/MKVConverter`](lambda/MKVConvert/index.js) function is triggered directly by an S3 upload event. An FFmpeg subprocess is used for file conversion. 
 
-* If the source is a sequence of buffered *webcam frames*, the browser client posts to an [API Gateway - Lambda Proxy](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-create-api-as-simple-proxy-for-lambda.html) endpoint, triggering the [lambda/WebApi/frame-converter](lambda/WebApi/frame-converter.js) function. This function uses FFmpeg to construct a short MKV fragment out of the image frame sequence. For details on how this API request is executed, see the [function-specific documentation](lambda/WebApi/README.md).
+* If the source is a sequence of buffered *webcam frames*, the browser client posts frame data to an [API Gateway - Lambda Proxy](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-create-api-as-simple-proxy-for-lambda.html) endpoint, triggering the [`lambda/WebApi/frame-converter`](lambda/WebApi/frame-converter.js) function. This function uses FFmpeg to construct a short MKV fragment out of the image frame sequence. For details on how this API request is executed, see the [function-specific documentation](lambda/WebApi/README.md).
 
 In both cases, converted MKV files are archived in an S3 bucket, triggering the next step in the pipeline.
 
 ### Kinesis Video Stream
 
-An MKV file upload event triggers the [lambda/S3ToKVS](lambda/S3ToKVS/LambdaFunctionHandler.java) function, which uses the [Kinesis Video Stream Producer SDK for Java](https://github.com/awslabs/amazon-kinesis-video-streams-producer-sdk-java) to put the media fragments into a Kinesis Video Stream.
+An MKV file upload event triggers the [`lambda/S3ToKVS`](lambda/S3ToKVS/LambdaFunctionHandler.java) function, which uses the [Kinesis Video Stream Producer SDK for Java](https://github.com/awslabs/amazon-kinesis-video-streams-producer-sdk-java) to put the media fragments into a Kinesis Video Stream.
 
 #### Misc KVS Notes
 
@@ -73,7 +73,7 @@ An MKV file upload event triggers the [lambda/S3ToKVS](lambda/S3ToKVS/LambdaFunc
 
 ### Rekognition Stream Processor
 
-The Kinesis Video Stream is used as input to a [Rekognition Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html), that detects and recognizes faces in the video stream, and publishes raw records to a [Kinesis Data Stream](). See [lambda/StreamResourceProvisioner](lambda/StreamResourceProvisioner) for how these resources are provisioned.
+The Kinesis Video Stream is used as input to a [Rekognition Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html), that detects and recognizes faces in the video stream, and publishes raw records to a [Kinesis Data Stream](). See [`lambda/StreamResourceProvisioner`](lambda/StreamResourceProvisioner) for how these resources are provisioned.
 
 ### Body Motion Analytics
 
@@ -83,8 +83,6 @@ The [raw output](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-vid
 
 For this demo, the web app consumes body motion metrics directly from the processed Kinesis Data Stream and renders them as real-time updating chart visualizations. 
 
-### API Gateway
-
 ## Deploying
 
 ### CloudFormation Deployment
@@ -92,7 +90,7 @@ For this demo, the web app consumes body motion metrics directly from the proces
 There are two flavors of this project that can be deployed:
 
 * **'Full'** version - expressed in [`template.yaml`](template.yaml). Includes all components described in previous section.
-* **'Lite'** version - expressed in [`template_lite.yaml`](template_lite.yaml). Only includes browser Webcam to Kinesis Video Stream component. Rekognition Video, Kinesis Data Streams, and demo analytics + visualizations are excluded for simplicity.  
+* **'Lite'** version - expressed in [`template_lite.yaml`](template_lite.yaml). Only includes browser Webcam to Kinesis Video Stream component. Rekognition Video, Kinesis Data Streams, and demo analytics + visualizations are excluded for simplicity.
 
 This project can be deployed using [AWS
 CloudFormation](https://aws.amazon.com/cloudformation/) as a *Change Set for a New Stack* (a Serverless Application Transform must first be applied to the `template.yaml` definition).
@@ -109,7 +107,7 @@ Click the button to begin the stack creation process:
 4. Once deployment is complete, launch the demo web app by visiting the **WebAppSecureURL** link listed under *Outputs*.
 
 By default, the CloudFormation template
-creates all necessary backend resources for this project (Kinesis Video Stream, Rekognition Stream Processor, Kinesis Data Streams, Serverless Lambda functions, and API Gateway). It copies the dashboard web application to an
+creates all necessary AWS resources for this project (Kinesis Video Stream, Rekognition Stream Processor, Kinesis Data Streams, Serverless Lambda functions, and API Gateway). It copies the dashboard web application to an
 [Amazon S3](https://aws.amazon.com/s3/) bucket and outputs a secure URL (fronted by API Gateway) for accessing the web app.
 
 ### Command Line Deployment
