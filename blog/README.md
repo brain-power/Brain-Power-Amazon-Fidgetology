@@ -25,6 +25,8 @@ suggestions for how to add complex lambda functions or machine-learning models f
 nuanced analysis suited to your unique needs.
 
 ## How it Works
+
+![System Architecture Diagram](attachments/SystemArchitectureDiagram.png?raw=true "System Architecture Diagram")
  
 ### Kinesis Video Streams Ingestion
 
