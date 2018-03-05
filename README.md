@@ -17,6 +17,8 @@ AWS Technologies used:
 
 ## Components
 
+![System Architecture Diagram](blog/attachments/SystemArchitectureDiagram.png?raw=true "System Architecture Diagram")
+
 ### Web Dashboard App
 
 The client dashboard app allows users to 1) upload pre-recorded video and 2) stream webcam feed to [Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo), and visualize the resulting face motion metrics computed by [Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html) in near real-time. For details on how client-side streaming works and tools used to build the web app, see the [dashboard app-specific documentation](dashboard).
