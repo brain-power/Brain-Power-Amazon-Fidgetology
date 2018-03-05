@@ -11,7 +11,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         units: "deg",
         precision: 1
     }, {
-        displayName: "Face Rotational Movement",
+        displayName: "Rotational Motion",
         plottingFactors: ["RotationalVelocity"],
         thresholds: [10, 20, 30, 45],
         yAxisLabel: "Change  in  Head  Orientation  (deg / sec)",
@@ -20,7 +20,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         precision: 0,
         units: "deg/sec"
     }, {
-        displayName: "Face Translational Movement",
+        displayName: "Translational Motion",
         plottingFactors: ["TranslationalVelocity"],
         thresholds: [0.05, 0.075, 0.10, 0.20],
         yAxisLabel: "Velocity  of  Face Center  (proportion of frame / sec)",
@@ -197,10 +197,11 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         });
         $scope.selectedMetric.plottingFactors.forEach(function(factor, index) {
             var previousData = (previousSeries[index] || {}).data || [];
+            var joinedData = previousData.concat(recentFaceData.map(function(face) { return face[factor]; }))
             var seriesItem = {
                 name: factor,
                 type: 'line',
-                data: previousData.concat(recentFaceData.map(function(face) { return face[factor]; })),
+                data: joinedData,
                 symbolSize: 7,
                 itemStyle: {
                     normal: {
@@ -237,8 +238,45 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                 series.data.shift();
             });
         }
+        if ($scope.selectedMetric.thresholds) {
+            opts.series.forEach(function(series) {
+                series.areaStyle = getAreaGradient(series.data);
+            });
+        }
         return opts;
     };
+
+    var getAreaGradient = function(data) {
+        var pieces = [{
+            color: $scope.threshold_colors[3]
+        }, {
+            color: $scope.threshold_colors[2]
+        }, {
+            color: $scope.threshold_colors[1]
+        }, {
+            color: $scope.threshold_colors[0]
+        }];
+        var _pieces = [];
+        var dataMax = Math.max.apply(Math, data);
+        var thresholdIndex = $scope.selectedMetric.thresholds.findIndex(function(thresholdValue) {
+            return thresholdValue >= dataMax;
+        });
+        if (thresholdIndex === undefined) {
+            thresholdIndex = $scope.selectedMetric.thresholds.length - 1;
+        }
+        for (var i = pieces.length - 1; i >= pieces.length - 1 - thresholdIndex; i--) {
+            _pieces = [{ color: pieces[i].color }].concat(_pieces);
+        }
+        _pieces.forEach(function(piece, index) {
+            piece.offset = index / _pieces.length;
+        });
+        return {
+            normal: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, _pieces),
+                origin: 'start'
+            }
+        };
+    }
 
     var getVisualMapPieces = function() {
         return {
@@ -278,7 +316,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         console.log("New plotting history", $scope.selectedPlotHistory);
         $scope.raw_metrics_chart_opts.xAxis.data = recordsBuffer.map(function(record) {
             var face = record.data.FaceSearchResponse[0].DetectedFace;
-            return Math.round(1000 * (face.ProducerTimestamp + face.RecordIndex));
+            return Math.round(1000 * face.Timestamp);
         });
         $scope.raw_metrics_chart_opts.series = $scope.selectedMetric.plottingFactors.map(function(factor) {
             return {
@@ -286,20 +324,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                 type: 'line',
                 data: recordsBuffer.map(function(record) {
                     return record.data.FaceSearchResponse[0].DetectedFace[factor]
-                }),
-                symbolSize: 7,
-                itemStyle: {
-                    normal: {
-                        lineStyle: {
-                            width: 2
-                        }
-                    },
-                    emphasis: {
-                        lineStyle: {
-                            width: 4
-                        }
-                    }
-                }
+                })
             }
         });
         $scope.latestMetricTimestamp = $scope.raw_metrics_chart_opts.xAxis.data[$scope.raw_metrics_chart_opts.xAxis.data.length - 1];
