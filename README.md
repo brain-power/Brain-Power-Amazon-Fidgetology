@@ -19,15 +19,17 @@ AWS Technologies used:
 
 ### Web Dashboard App
 
-The client dashboard app allows users to 1) upload static video and 2) stream webcam feed to [Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo), and visualize the resulting face motion metrics computed by [Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html) in near real-time. For details on how client-side streaming works and tools used to build the web app, see the [dashboard app-specific documentation](dashboard).
+The client dashboard app allows users to 1) upload pre-recorded video and 2) stream webcam feed to [Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo), and visualize the resulting face motion metrics computed by [Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html) in near real-time. For details on how client-side streaming works and tools used to build the web app, see the [dashboard app-specific documentation](dashboard).
 
 #### Uploading Videos
 
-TODO: Screenshot of this feature
+![Upload a Video](blog/attachments/screenshots/UploadVideoExampleBlur.jpg?raw=true "Upload a Video")
 
 #### Streaming Video from Webcam
 
-TODO: Screenshot of this feature
+![Stream your Webcam](blog/attachments/screenshots/WebcamStreamExampleCensored.png?raw=true "Stream Webcam")
+
+(*Faces censored)
 
 #### Browser Support
 
@@ -61,6 +63,12 @@ In both cases, converted MKV files are archived in an S3 bucket, triggering the 
 
 An MKV file upload event triggers the [`lambda/S3ToKVS`](lambda/S3ToKVS/LambdaFunctionHandler.java) function, which uses the [Kinesis Video Stream Producer SDK for Java](https://github.com/awslabs/amazon-kinesis-video-streams-producer-sdk-java) to put the media fragments into a Kinesis Video Stream.
 
+Below is a side-by-side illustration of webcam streaming to the Kinesis Video Streams online console. The lag between the live webcam app feed (left) and the time these frames are played back on the KVS console (right) is about 5 seconds (though this may vary depending on browser/platform/specs of your machine).
+
+![Streaming Latency Demo](blog/attachments/screenshots/KVSConsoleDemoCrop.gif?raw=true "Streaming Latency Demo")
+
+To decrease the lag, you can experiment with adjusting the **No. Frames to Buffer** parameter using the form input below the live webcam feed. Beware that specifying too low of a buffer size may cause KVS to receive frames out-of-order.
+
 #### Misc KVS Notes
 
 **Note 1**: Currently, Kinesis Video Stream Producer SDK is only available in Java/C++, so this step could not be merged with the previous stream conversion step, which runs in a Node.js container for consistently fast startup time. If a KVS Producer SDK becomes available in Node.js/Python, then this step should just be merged with the previous step (as a single Lambda execution) to avoid the needless latency of using S3 as a file transfer proxy between different Lambda containers. While a viable alternative is to do the previous stream conversion step in Java as well, the faster startup times and smaller deployment packages associated with Node.js make it more suitable for this demo. One could definitely explore re-factoring all the serverless Lambda functions in Java to see if it improves performance.
@@ -68,8 +76,6 @@ An MKV file upload event triggers the [`lambda/S3ToKVS`](lambda/S3ToKVS/LambdaFu
 **Note 2**: To simplify the build process, we do not include the entire Java project associated with this `S3ToKVS` function. We only include the compiled, deploy-ready `.jar` package, and the main [`LambdaFunctionHandler.java`](lambda/S3ToKVS/LambdaFunctionHandler.java) file to demonstrate usage of the `putMedia` operation with the Java KVS Producer SDK. However, if you want modify the Lambda function handler for your own use, you must follow instructions to [create a Lambda deployment package for Java](https://docs.aws.amazon.com/lambda/latest/dg/lambda-java-how-to-create-deployment-package.html), which involves using Maven/Eclipse, greatly complicating the build process. All in all, until a KVS Producer SDK becomes available in Node.js/Python, there is not an easy workaround.
 
  **Note 3**: Another route is to abandon Serverless/Lambda and provision a custom AMI as a webRTC server that also handles stream conversion. This solution will probably yield the best performance and lowest latency, but is not in the spirit of this Serverless demo.
-
-*TODO: GIF illustrating side-by-side web app usage and video appearing in KVS web console.*
 
 ### Rekognition Stream Processor
 
@@ -102,9 +108,22 @@ Click the button to begin the stack creation process:
 **Lite** Version:  <a target="_blank" href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stack/changeset/new?templateURL=https:%2F%2Fs3.amazonaws.com%2Fbrainpower-aws-blogs%2Fartifacts%2Ffidgetology-demo-app%2Fpackaged-template_lite.yaml"><span><img height="24px" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png"/></span></a>
 
 1. Click **Next**, and specify **bp-fidgetology-demo** as both the **Stack name** and **Change set name**. Accept all default parameters and click **Next**.
-2. Click **Next** again to get to the final Review page. Under *Capabilities*, confirm acknowledgement that new IAM resources will be created. Click **Create change set**.
+
+![Create change set -- details](blog/attachments/screenshots/CreateChangeSetDetails.png?raw=true "Create change set -- details")
+
+2. Click **Next** again to get to the final Review page. Under *Capabilities*, confirm acknowledgement that new IAM resources will be created. Then click **Create change set**.
+
+![Create change set -- IAM](blog/attachments/screenshots/CreateChangeSetIAM.png?raw=true "Create change set -- IAM")
+
 3. On the next page, wait for the stack to finish 'Computing changes'. Then click **Execute** (top-right corner of page) to start the stack deployment. Confirm, and refresh the CloudFormation page to find your newly created stack. Click on it to monitor the deployment process, which should take no more than 3 minutes.
+
+![Create change set -- Execute](blog/attachments/screenshots/CreateChangeSetExecute.png?raw=true "Create change set -- Execute")
+
+![Create Stack -- In Progress](blog/attachments/screenshots/CreateStackInProgress.png?raw=true "Create Stack -- In Progress")
+
 4. Once deployment is complete, launch the demo web app by visiting the **WebAppSecureURL** link listed under *Outputs*.
+
+![Stack Completed Output](blog/attachments/screenshots/WebAppURLOutput.png?raw=true "Stack Completed Output")
 
 By default, the CloudFormation template
 creates all necessary AWS resources for this project (Kinesis Video Stream, Rekognition Stream Processor, Kinesis Data Streams, Serverless Lambda functions, and API Gateway). It copies the dashboard web application to an
@@ -155,6 +174,8 @@ Then navigate to http://localhost:3000 in your browser.
 ## Tear down
 
 If you launched the stack from the CloudFormation online console, simply delete the stack online.
+
+![Delete Stack](blog/attachments/screenshots/DeleteStack.png?raw=true "Delete Stack")
 
 If you deployed from the command line, run the master tear down command:
 
