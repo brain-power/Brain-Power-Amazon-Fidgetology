@@ -6,3 +6,5 @@ packaged-template_lite.yaml
 *.log
 tmp/
 .idea/
+blog/attachments/ignore
+blog/scratch

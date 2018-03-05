@@ -44,7 +44,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
     }];
     $scope.threshold_colors = ["#009966", "#ffde33", "#ff9933", "#cc0033", "#660099"];
 
-    $scope.selectedMetric = $scope.metricsConfigs[0];
+    $scope.selectedMetric = $scope.metricsConfigs[1];
     $scope.selectedPlotHistory = $scope.plottingHistorySettings[1];
 
     var flatten = function(obj, name, stem) {
