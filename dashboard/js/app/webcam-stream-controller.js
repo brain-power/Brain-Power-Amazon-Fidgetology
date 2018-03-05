@@ -2,8 +2,7 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
 
     var looperPromise;
 
-    var DEFAULT_BUFFER_SIZE = 50;
-    var TARGET_FPS = 12;
+    var DEFAULT_BUFFER_SIZE = 40;
     var frameBuffer;
     var shouldUploadFrames = true;
 
@@ -78,7 +77,7 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
             if ($scope.isStreaming) {
                 Webcam.snap(frameCallback);
                 lastTimestamp = new Date().getTime();
-                looperPromise = setTimeout(looper, 1000 / TARGET_FPS);
+                looperPromise = setTimeout(looper, 1000 / parseInt($scope.Config.TARGET_FRAME_RATE));
             }
         };
         looper();

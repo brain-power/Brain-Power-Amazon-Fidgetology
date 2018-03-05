@@ -56,7 +56,7 @@ exports.convertFramesToMKVFragment = function(frameDataArray, params) {
             // -crf specifies the compression quality - 0 is perfectly lossless (unrecommended; very slow); 100 is very lossy.
             var ffmpegCmd = (process.env.FFMPEG_CMD)
                 .replace("%o", outputFileLocation)
-                .replace("%r", process.env.FFMPEG_FRAME_RATE || 12)
+                .replace("%r", process.env.TARGET_FRAME_RATE || 10)
                 .replace("%i", path.resolve(path.join(TMP_DIR, FRAME_PREFIX + "%0" + PAD_LENGTH.toString() + "d.jpg")));
             if (process.env.local) {
                 // Assume ffmpeg has been installed to path in local environment..

@@ -69,7 +69,7 @@ function startStreaming() {
 
 var looperPromise;
 function startSteamLoop() {
-  var TARGET_FPS = 15;
+  var TARGET_FPS = 10;
   var looper = function() {
     // Pass current frame image data to handler.
     Webcam.snap(frameCallback);

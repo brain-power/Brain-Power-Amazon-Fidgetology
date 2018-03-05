@@ -31,6 +31,7 @@ Globals:
         REK_FACE_MATCH_THRESHOLD: !Ref FaceMatchTreshold
         UPLOADS_BUCKET_NAME: !Sub "${AWS::StackName}-uploads-${AWS::AccountId}"
         WEBAPP_BUCKET_NAME: !Sub "${AWS::StackName}-webapp-${AWS::AccountId}"
+        TARGET_FRAME_RATE: !Ref TargetFrameRate
         IdentityPoolId: !Ref IdPool
 
 Parameters:
@@ -60,6 +61,13 @@ Parameters:
     Description: >
             Name of empty Rekognition Face Collection that will be created with this stack. 
             Change to the name of an existing Face Collection if you do not want this stack to create a new one.
+  TargetFrameRate:
+    Type: Number
+    Default: 10
+    MinValue: 5
+    MaxValue: 20
+    Description: >
+            Specify target frame rate (in FPS) that webcam should stream at.
   FaceMatchTreshold:
     Type: Number
     Default: 90
