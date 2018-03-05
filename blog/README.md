@@ -4,6 +4,8 @@ Ned T. Sahin, PhD, Runpeng Liu, Joseph Salisbury, PhD, Lillian Bu
 
 ## Introduction
 
+![Teaser Graphic](attachments/FidgetologyTeaser.png?raw=true "Teaser Graphic")
+
 Producers of content (ads, TV, movies, political campaigns; as well as classroom teaching)
 usually judge the success of their content by surveys or by user actions such as clicks. These are
 often subjective, informal, post-hoc, and/or binary proxies for perceived value. They may miss
@@ -45,6 +47,8 @@ nuanced analysis suited to your unique needs.
 ### Kinesis Analytics/Sagemaker
 
 ## Results / Brain Power's Use Case
+
+![Results Montage](attachments/results/Glass_ON_OFF_SideBySide_Montage.png?raw=true "Results Montage")
 
 ## Summary
 
