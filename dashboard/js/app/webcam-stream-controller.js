@@ -5,7 +5,8 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
     var DEFAULT_BUFFER_SIZE = 40;
     var TARGET_FPS = 15;
     var frameBuffer;
-    var shouldUploadFrames = true;
+
+    $scope.shouldUploadFrames = 1;
 
     function stopStreaming() {
         try {
@@ -46,6 +47,7 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
     }
 
     var frameCallback = function(imgData) {
+        console.log($scope.shouldUploadFrames)
         if (!$scope.isStreaming) { return; }
         frameBuffer.addFrame(imgData);
         if ($scope.streamMetadata.bufferSize &&
@@ -56,7 +58,7 @@ app.controller('WebcamStreamController', ['$scope', '$http', '$timeout', functio
                 $scope.streamMetadata.postInterval = new Date().getTime() - $scope.streamMetadata.lastPost;
             }
             $scope.streamMetadata.lastPost = new Date().getTime();
-            if (shouldUploadFrames) {
+            if ($scope.shouldUploadFrames) {
                 $scope.streamMetadata.inProgress = true;
                 $http.post(getDataEndpoint(), data).then(function(response) {
                     $scope.streamMetadata.KVSLatency = new Date().getTime() - $scope.streamMetadata.lastPost;

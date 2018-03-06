@@ -37,7 +37,12 @@
             Upload Video
         </md-button>
         <md-button ng-click="toggleWebcamStream($event)" ng-disabled="inProgress" class="md-primary md-raised">
-            Stream Webcam
+            <label ng-if="!isStreaming">
+                Stream Webcam
+            </label>
+            <label ng-if="isStreaming">
+                Stop Webcam
+            </label>
         </md-button>
         <md-button ng-show="isStreaming" href="https://console.aws.amazon.com/kinesisvideo/streams/streamName/{{Config.KVS_STREAM_NAME}}?region={{Config.AWS_REGION}}" target="_blank" class="md-raised">
             KVS Console&nbsp;<i class="fa fa-external-link-alt"></i>
@@ -47,6 +52,9 @@
         <section ng-controller="WebcamStreamController">
             <md-progress-linear md-mode="indeterminate" ng-show="streamMetadata.inProgress" style="width:100%;max-width:640px;"></md-progress-linear>
             <div id="webcam-canvas"></div> <br>
+            <md-checkbox ng-show="isStreaming" ng-model="shouldUploadFrames" ng-true-value="1" ng-false-value="0" aria-label="Checkbox 1" class="md-primary">
+                Upload Frames
+            </md-checkbox>
             <div class="stream-metrics" ng-if="streamMetadata && isStreaming">
                 <md-input-container>
                     <label>Webcam FPS</label>
