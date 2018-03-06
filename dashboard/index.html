@@ -44,7 +44,7 @@
                         <md-button ng-click="openUploadDialog($event)" ng-show="Config.IdentityPoolId && !isStreaming" ng-disabled="inProgress" class="md-secondary md-raised">
                             <i class="fa fa-upload"></i>&nbsp;Upload Video
                         </md-button>
-                        <md-button ng-click="toggleWebcamStream($event)" ng-disabled="inProgress" class="md-primary md-raised">
+                        <md-button ng-click="toggleWebcamStream($event)" ng-disabled="inProgress" class="md-primary md-raised" aria-label="Toggle webcam">
                             <label ng-if="!isStreaming">
                                 <i class="fa fa-video"></i> Stream Webcam
                             </label>
@@ -63,12 +63,11 @@
                     </div>
                 </md-toolbar>
                 <section ng-controller="WebcamStreamController" ng-hide="staticVideo[0] && !isStreaming">
-                    <div class="md-padding" style="font-size:1.25em; padding-bottom:0">
-                        <span ng-if="streamMetadata.startTimestamp && currentTime > streamMetadata.startTimestamp">
+                    <div class="md-padding" style="font-size:1.25em; background-color:#eee">
+                        &nbsp; <span ng-show="streamMetadata.startTimestamp && currentTime > streamMetadata.startTimestamp">
                             <i class="fa fa-clock"></i> {{currentTime - streamMetadata.startTimestamp | date : 'm:ss' }}
                         </span>
                     </div>
-                    <br>
                     <md-progress-linear md-mode="indeterminate" ng-show="streamMetadata.inProgress" style="width:100%;max-width:640px;"></md-progress-linear>
                     <div id="webcam-canvas"></div>
                     <br>
@@ -86,10 +85,10 @@
                             <label>Time b/w Requests (ms)</label>
                             <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.postInterval"></input>
                         </md-input-container>
-                        <md-input-container>
+                        <!--<md-input-container>
                             <label>Webcam-KVS Latency (ms)</label>
                             <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.KVSLatency"></input>
-                        </md-input-container>
+                        </md-input-container>-->
                         <!--<md-input-container>
                     <label>Last request size
                         <br>(Lambda max: 6 MB)</label>
@@ -104,7 +103,7 @@
             <div flex hide show-gt-sm ng-controller="MetricsChartController" ng-init="init()" ng-if="Config.KDS_RAW_STREAM_NAME">
                 <md-toolbar class="md-hue-2">
                     <div class="md-toolbar-tools">
-                        <h1 flex md-truncate hide show-gt-md>Raw Face Metrics (from Rekognition Video)</h1>
+                        <h1 flex md-truncate hide show-gt-md>Face Motion Metrics (from Rekognition Video)</h1>
                         <md-button hide show-gt-md ng-show="isStreaming" href="https://console.aws.amazon.com/kinesis/home?region={{Config.AWS_REGION}}#streams/details?streamName={{Config.KDS_RAW_STREAM_NAME}}" target="_blank" class="md-raised">
                             KDS Console&nbsp;<i class="fa fa-external-link-alt"></i>
                         </md-button>&nbsp;
@@ -114,11 +113,32 @@
                         </div>
                     </div>
                 </md-toolbar>
-                <br/>
-                <div style="font-size:1.25em; margin-left:12px;" ng-if="streamMetadata.startTimestamp && latestMetricTimestamp > streamMetadata.startTimestamp">
-                    <i class="fa fa-clock"></i> {{latestMetricTimestamp - streamMetadata.startTimestamp | date : 'm:ss'}}
+                <div style="font-size:1.25em; background-color:#eee;" class="md-padding">
+                    &nbsp; <span ng-show="streamMetadata.startTimestamp && latestMetricTimestamp > streamMetadata.startTimestamp">
+                        <i class="fa fa-clock"></i> {{latestMetricTimestamp - streamMetadata.startTimestamp | date : 'm:ss'}}
+                    </span>
                 </div>
+                <section ng-show="latestMetricTimestamp">
+                    <br/>
+                    <md-input-container flex>
+                        <label>Choose data to plot</label>
+                        <md-select ng-model="selectedMetric" ng-change="metricChanged()">
+                            <md-option ng-repeat="config in metricsConfigs" ng-value="config">
+                                {{config.displayName}}
+                            </md-option>
+                        </md-select>
+                    </md-input-container> &nbsp;
+                    <md-input-container flex>
+                        <label>Plotting history</label>
+                        <md-select ng-model="selectedPlotHistory" ng-change="metricChanged()">
+                            <md-option ng-repeat="interval in plottingHistorySettings" ng-value="interval">
+                                {{interval.displayName}}
+                            </md-option>
+                        </md-select>
+                    </md-input-container>
+                </section>
                 <br>
+                <h2 ng-if="isStreaming && !latestMetricTimestamp" align="center"> ... Waiting for data ... </h2>
                 <div id="chart-metrics-raw" class="chart-container" style="width:100%; height: 500px"></div>
             </div>
         </div>
