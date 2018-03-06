@@ -22,63 +22,118 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.js"></script>
     <script src="js/lib/ng-file-upload/ng-file-upload.min.js"></script>
     <script src="js/lib/ng-file-upload/ng-file-upload-shim.min.js"></script>
+    <!-- Use WebcamJS to capture video frames -->
     <script src="js/lib/webcamjs/webcam.js"></script>
-    <script src="js/custom/webcam-canvas.js"></script>
+    <script src="js/custom/frame-buffer.js"></script>
     <script src="js/app/config.js"></script>
     <script src="js/app/ng-config.js"></script>
-    <!-- Angular controllers -->
+    <!-- Angular app controllers -->
     <script src="js/app/root-controller.js"></script>
     <script src="js/app/webcam-stream-controller.js"></script>
+    <script src="js/app/chart-controllers/metrics-chart-controller.js"></script>
+    <script src="js/app/chart-controllers/fidgetometer-controller.js"></script>
 </head>
 
 <body ng-app="dashboardApp" ng-controller="RootController as ctrl" ng-init="init()" ng-cloak>
-    <md-content class="md-padding">
-        <md-button ng-click="openUploadDialog($event)" ng-disabled="inProgress" class="md-secondary md-raised">
-            Upload Video
-        </md-button>
-        <md-button ng-click="toggleWebcamStream($event)" ng-disabled="inProgress" class="md-primary md-raised">
-            <label ng-if="!isStreaming">
-                Stream Webcam
-            </label>
-            <label ng-if="isStreaming">
-                Stop Webcam
-            </label>
-        </md-button>
-        <md-button ng-show="isStreaming" href="https://console.aws.amazon.com/kinesisvideo/streams/streamName/{{Config.KVS_STREAM_NAME}}?region={{Config.AWS_REGION}}" target="_blank" class="md-raised">
-            KVS Console&nbsp;<i class="fa fa-external-link-alt"></i>
-        </md-button>
-        <br>
-        <br>
-        <section ng-controller="WebcamStreamController">
-            <md-progress-linear md-mode="indeterminate" ng-show="streamMetadata.inProgress" style="width:100%;max-width:640px;"></md-progress-linear>
-            <div id="webcam-canvas"></div> <br>
-            <md-checkbox ng-show="isStreaming" ng-model="shouldUploadFrames" ng-true-value="1" ng-false-value="0" aria-label="Checkbox 1" class="md-primary">
-                Upload Frames
-            </md-checkbox>
-            <div class="stream-metrics" ng-if="streamMetadata && isStreaming">
-                <md-input-container>
-                    <label>Webcam FPS</label>
-                    <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.framerate"></input>
-                </md-input-container>
-                <md-input-container>
-                    <label>No. Frames to Buffer</label>
-                    <input class="md-primary" min="20" max="80" type="number" ng-model="streamMetadata.bufferSize"></input>
-                </md-input-container>
-                <md-input-container>
-                    <label>Time b/w Requests (ms)</label>
-                    <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.postInterval"></input>
-                </md-input-container>
-                <md-input-container>
-                    <label>Webcam-KVS Latency (ms)</label>
-                    <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.KVSLatency"></input>
-                </md-input-container>
-                <md-input-container>
+    <md-content>
+        <div layout="row">
+            <div flex>
+                <md-toolbar class="md-hue-1">
+                    <div class="md-toolbar-tools">
+                        <h3 md-truncate hide show-gt-md>Video Source for KVS:&nbsp;</h3>
+                        <md-button ng-click="openUploadDialog($event)" ng-show="Config.IdentityPoolId && !isStreaming" ng-disabled="inProgress" class="md-secondary md-raised">
+                            <i class="fa fa-upload"></i>&nbsp;Upload Video
+                        </md-button>
+                        <md-button ng-click="toggleWebcamStream($event)" ng-disabled="inProgress" class="md-primary md-raised">
+                          <label ng-if="!isStreaming">
+                              <i class="fa fa-video"></i> Stream Webcam
+                          </label>
+                          <label ng-if="isStreaming">
+                              <i class="fa fa-stop"></i> Stop Webcam
+                          </label>
+                        </md-button>
+                        <md-button hide show-gt-md ng-show="isStreaming" href="https://console.aws.amazon.com/kinesisvideo/streams/streamName/{{Config.KVS_STREAM_NAME}}?region={{Config.AWS_REGION}}" target="_blank" class="md-raised">
+                            KVS Console&nbsp;<i class="fa fa-external-link-alt"></i>
+                        </md-button>
+                        <h1 flex></h1>
+                        <div md-truncate hide show-gt-md ng-show="currentTime">
+                            <small>Producer Time</small>
+                            <br/><b>{{currentTime | date : 'h:mm:ss a'}}</b>
+                        </div>
+                    </div>
+                </md-toolbar>
+                <section ng-controller="WebcamStreamController" ng-hide="staticVideo[0] && !isStreaming">
+                    <div class="md-padding" style="font-size:1.25em; padding-bottom:0">
+                        <span ng-if="streamMetadata.startTimestamp && currentTime > streamMetadata.startTimestamp">
+                            <i class="fa fa-clock"></i> {{currentTime - streamMetadata.startTimestamp | date : 'm:ss' }}
+                        </span>
+                    </div>
+                    <br>
+                    <md-progress-linear md-mode="indeterminate" ng-show="streamMetadata.inProgress" style="width:100%;max-width:640px;"></md-progress-linear>
+                    <div id="webcam-canvas"></div>
+                    <br>
+                    <div class="stream-metrics md-padding" ng-if="streamMetadata && isStreaming" style="padding-bottom:0">
+                        <md-input-container>
+                            <label>Webcam FPS</label>
+                            <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.framerate"></input>
+                        </md-input-container>
+                        <md-input-container>
+                            <label>No. Frames to Buffer</label>
+                            <input class="md-primary" min="20" max="80" type="number" ng-model="streamMetadata.bufferSize"></input>
+                        </md-input-container>
+                        <md-input-container>
+                            <label>Time b/w Requests (ms)</label>
+                            <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.postInterval"></input>
+                        </md-input-container>
+                        <md-input-container>
+                            <label>Webcam-KVS Latency (ms)</label>
+                            <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.KVSLatency"></input>
+                        </md-input-container>
+                        <!--<md-input-container>
                     <label>Last request size
                         <br>(Lambda max: 6 MB)</label>
                     <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.payloadSize"></input>
-                </md-input-container>
+                </md-input-container>-->
+                    </div>
+                </section>
+                <div ng-hide="isStreaming || !staticVideo[0]">
+                    <video class="video-preview" style="width:100%" autoplay controls ngf-src="staticVideo[0]"></video>
+                </div>
             </div>
-        </section>
+            <div flex hide show-gt-sm ng-controller="MetricsChartController" ng-init="init()" ng-if="Config.KDS_RAW_STREAM_NAME">
+                <md-toolbar class="md-hue-2">
+                    <div class="md-toolbar-tools">
+                        <h1 flex md-truncate hide show-gt-md>Raw Face Metrics (from Rekognition Video)</h1>
+                        <md-button hide show-gt-md ng-show="isStreaming" href="https://console.aws.amazon.com/kinesis/home?region={{Config.AWS_REGION}}#streams/details?streamName={{Config.KDS_RAW_STREAM_NAME}}" target="_blank" class="md-raised">
+                            KDS Console&nbsp;<i class="fa fa-external-link-alt"></i>
+                        </md-button>&nbsp;
+                        <div hide show-gt-sm ng-if="latestMetricTimestamp">
+                            <small>Lastest Data</small>
+                            <br><b>{{latestMetricTimestamp | date : 'h:mm:ss a'}}</b>
+                        </div>
+                    </div>
+                </md-toolbar>
+                <br/>
+                <div style="font-size:1.25em; margin-left:12px;" ng-if="streamMetadata.startTimestamp && latestMetricTimestamp > streamMetadata.startTimestamp">
+                    <i class="fa fa-clock"></i> {{latestMetricTimestamp - streamMetadata.startTimestamp | date : 'm:ss'}}
+                </div>
+                <br>
+                <div id="chart-metrics-raw" class="chart-container" style="width:100%; height: 500px"></div>
+            </div>
+        </div>
+        <div layout="row" ng-if="Config.KDS_RAW_STREAM_NAME">
+            <div flex>
+                <md-toolbar class="md-hue-3">
+                    <div class="md-toolbar-tools">
+                        <h1 flex md-truncate>Analytics</h1>
+                    </div>
+                </md-toolbar>
+                <div flex ng-controller="FidgetometerController" ng-init="init()">
+                    <br>
+                    <div id="fidgetometer" class="chart-container" style="width:100%; height: 500px"></div>
+                </div>
+            </div>
+        </div>
         <br>
     </md-content>
 </body>

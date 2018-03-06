@@ -14,6 +14,7 @@ var fs = require('fs'),
 process.env.local = true;
 process.env.AWS_REGION = config.AWS_REGION || "us-east-1";
 process.env.FFMPEG_CMD = config.FFMPEG_CMD;
+process.env.PRODUCER_START_TIMESTAMP_KEY = config.PRODUCER_START_TIMESTAMP_KEY || "producer_start_timestamp";
 
 var app = express();
 
