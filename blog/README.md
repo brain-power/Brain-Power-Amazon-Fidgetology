@@ -33,9 +33,9 @@ nuanced analysis suited to your unique needs.
  
 A client video stream-producing web app allows users to 1) upload pre-recorded video and/or 2) live stream their webcam feed to [Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo). This webcam streaming functionality is backed by the [WebRTC](https://webrtc.github.io/samples/) `getUserMedia` API, and is supported on all major browsers and platforms, with the exception iOS mobile. 
  
-Why a browser app? Of course, it's also possible to stream video from as IoT devices like [Amazon DeepLens](https://aws.amazon.com/deeplens/), or build a custom mobile app using the [Kinesis Video Streams Producer SDK for Android](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/producer-sdk-android.html), but a simple cross-platform web app that users can launch in any browser is much more accessible! 
+Why a browser app? Of course, it's also possible to stream video from IoT devices like [Amazon DeepLens](https://aws.amazon.com/deeplens/), or build a custom mobile app using the [Kinesis Video Streams Producer SDK for Android](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/producer-sdk-android.html), but a simple cross-platform web app that can be launched in any browser is much more accessible! 
  
-When static video (via [Amazon S3](https://aws.amazon.com/s3/) upload) or buffered webcam frames (via [Amazon API Gateway](https://aws.amazon.com/api-gateway/) request) are uploaded by the web app, a Lambda function (serving as a cloud proxy layer to Kinesis Video Streams) converts them to [streamable media fragments](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/how-data.html#how-data-frame). These media fragments are then put into a Kinesis Video Stream.  
+When static video (via [Amazon S3](https://aws.amazon.com/s3/) upload) or buffered webcam frames (via [Amazon API Gateway](https://aws.amazon.com/api-gateway/) request) are uploaded by the web app, an [AWS Lambda](https://aws.amazon.com/lambda/) function (serving as a cloud proxy layer to Kinesis Video Streams) converts them to [streamable media fragments](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/how-data.html#how-data-frame). These media fragments are then put into a Kinesis Video Stream.  
  
 #### Uploading a pre-recorded video 
  
@@ -43,13 +43,13 @@ When static video (via [Amazon S3](https://aws.amazon.com/s3/) upload) or buffer
  
 #### Streaming from browser webcam 
  
-Below is a side-by-side illustration of webcam streaming to the Kinesis Video Streams online console. The lag between the live webcam app feed (left) and the time these frames are played back on the KVS console (right) is about 5 seconds. 
+Below is a side-by-side illustration of webcam streaming to the Kinesis Video Streams (KVS) online console. The lag between the live webcam app feed (left) and the time these frames are played back on the KVS console (right) is about 5 seconds. 
  
 ![Streaming Latency Demo](attachments/screenshots/KVSConsoleDemoCrop.gif?raw=true "Streaming Latency Demo") 
  
 ### Rekognition Stream Processor 
  
-The Kinesis Video Stream is used as input to a [Rekognition Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html), which detects the positions of and recognizes faces in the video stream, and publishes these raw records to a [Kinesis Data Stream](). 
+The Kinesis Video Stream is used as input to a [Rekognition Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html), which detects the positions of and recognizes faces in the video stream, and publishes these raw records to a [Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/). 
  
 ### Motion Analytics 
  
@@ -64,7 +64,7 @@ For this project, we provide a web app (in the same interface as the video strea
 ### Deploy using CloudFormation 
  
 This entire project can be deployed using [AWS 
-CloudFormation](https://aws.amazon.com/cloudformation/) as a *Change Set for a New Stack* (a Serverless Application Transform must first be applied to the template definition). Explore the [Github repository for this project] for a description of configuration options and and AWS resource components, as well custom command-line deployment options.  
+CloudFormation](https://aws.amazon.com/cloudformation/) as a *Change Set for a New Stack* (a Serverless Application Transform must first be applied to the template definition). Explore the [Github repository for this project](https://github.com/brain-power/aws-fidgetology-demo-app) for a description of configuration options and AWS resource components, as well custom command-line deployment options.  
  
 Click the button to begin the stack creation process: 
  
@@ -239,5 +239,5 @@ We've provided a web application and accompanying Serverless architecture for st
  
 ## Acknowledgements 
  
-## Authors Bios 
+## Authors Bios
  
