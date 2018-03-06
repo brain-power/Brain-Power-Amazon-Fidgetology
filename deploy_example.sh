@@ -28,7 +28,7 @@ BOOTSTRAP_BUCKET_NAME="${STACK_NAME}-bootstrap-${ACCOUNT_ID}"
 
 aws s3 mb s3://${BOOTSTRAP_BUCKET_NAME}
 
-# These two lines deploy the 'Full' version of the web app (with Webcam, KVS, Rekognition Video + Analtyics features)
+# These two lines deploy the 'Full' version of the web app (with Webcam, KVS, Rekognition Video + Analytics features)
 aws cloudformation package --template-file template.yaml --s3-bucket ${BOOTSTRAP_BUCKET_NAME} --output-template-file master-template.yaml
 aws cloudformation deploy --template-file master-template.yaml --stack-name ${STACK_NAME} --capabilities CAPABILITY_IAM
 
