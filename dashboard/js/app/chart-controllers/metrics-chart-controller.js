@@ -45,7 +45,16 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
     $scope.threshold_colors = ["#009966", "#ffde33", "#ff9933", "#cc0033", "#660099"];
 
     $scope.selectedMetric = $scope.metricsConfigs[1];
+
+    // $scope.changeMetric = function(config){
+    //     $scope.selectedMetric = config 
+    // }
+
     $scope.selectedPlotHistory = $scope.plottingHistorySettings[1];
+
+    // $scope.changeTimeInterval = function(interval){
+    //     $scope.selectedPlotHistory = interval
+    // }
 
     var flatten = function(obj, name, stem) {
         var merge = function(objects) {
@@ -307,7 +316,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                 color: $scope.threshold_colors[4]
             }]
         }
-    }
+    };
 
     var chartUpdateLocked = false;
 
@@ -334,6 +343,11 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                 series.data.shift();
             });
         }
+        if ($scope.selectedMetric.thresholds) {
+            $scope.raw_metrics_chart_opts.series.forEach(function(series) {
+                series.areaStyle = getAreaGradient(series.data);
+            });
+        }
         $scope.raw_metrics_echart.setOption($scope.raw_metrics_chart_opts);
         chartUpdateLocked = false;
     };
@@ -345,6 +359,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         $scope.raw_metrics_chart_opts.yAxis.name = $scope.selectedMetric.yAxisLabel;
         $scope.raw_metrics_chart_opts.yAxis.max = isNaN($scope.selectedMetric.yMax) ? 'dataMax' : $scope.selectedMetric.yMax;
         $scope.raw_metrics_chart_opts.yAxis.min = isNaN($scope.selectedMetric.yMin) ? 'dataMin' : $scope.selectedMetric.yMin;
+        $scope.raw_metrics_chart_opts.visualMap = $scope.selectedMetric.thresholds ? getVisualMapPieces() : null;
         $scope.plotHistoryChanged();
         chartUpdateLocked = false;
     };

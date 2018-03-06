@@ -115,10 +115,61 @@
                     </div>
                 </md-toolbar>
                 <br/>
+
+<!--                 <md-menu>
+                   <md-button aria-label = "Sample Menu" class = "md-primary md-raised"
+                      ng-click = "$mdOpenMenu($event)" ng-show="isStreaming">
+                      Options
+                   </md-button>
+                   
+                   <md-menu-content width = "6">
+                    <md-menu-item ng-repeat = "config in metricsConfigs">
+                      <md-button ng-click="changeMetric(config)">
+                        {{ config.displayName }}
+                      </md-button>
+                    </md-menu-item>
+                   </md-menu-content>
+                </md-menu>
+
+                <md-menu>
+                   <md-button aria-label = "Sample Menu" class = "md-primary md-raised"
+                      ng-click = "$mdOpenMenu($event)" ng-show="isStreaming">
+                      Time Interval
+                   </md-button>
+                   
+                   <md-menu-content width = "6">
+                    <md-menu-item ng-repeat = "interval in plottingHistorySettings">
+                      <md-button ng-click="changeTimeInterval(interval)">
+                        {{ interval.displayName }}
+                      </md-button>
+                    </md-menu-item>
+                   </md-menu-content>
+                </md-menu> -->
+
+                <md-input-container ng-show="isStreaming">
+                  <label>Configurations</label>
+                  <md-select ng-model="selectedMetric" ng-change="metricChanged()">
+                    <md-option ng-repeat="config in metricsConfigs" ng-value="config">
+                      {{config.displayName}}
+                    </md-option>
+                  </md-select>
+                </md-input-container>
+
+                <md-input-container ng-show="isStreaming">
+                  <label>Time Interval</label>
+                  <md-select ng-model="selectedPlotHistory" ng-change="metricChanged()">
+                    <md-option ng-repeat="interval in plottingHistorySettings" ng-value="interval">
+                      {{interval.displayName}}
+                    </md-option>
+                  </md-select>
+                </md-input-container>
+
+
                 <div style="font-size:1.25em; margin-left:12px;" ng-if="streamMetadata.startTimestamp && latestMetricTimestamp > streamMetadata.startTimestamp">
                     <i class="fa fa-clock"></i> {{latestMetricTimestamp - streamMetadata.startTimestamp | date : 'm:ss'}}
                 </div>
                 <br>
+
                 <div id="chart-metrics-raw" class="chart-container" style="width:100%; height: 500px"></div>
             </div>
         </div>
