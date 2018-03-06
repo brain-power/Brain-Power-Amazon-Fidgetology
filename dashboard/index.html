@@ -45,7 +45,12 @@
                             <i class="fa fa-upload"></i>&nbsp;Upload Video
                         </md-button>
                         <md-button ng-click="toggleWebcamStream($event)" ng-disabled="inProgress" class="md-primary md-raised">
-                            <i class="fa fa-video"></i> Stream Webcam
+                          <label ng-if="!isStreaming">
+                              <i class="fa fa-video"></i> Stream Webcam
+                          </label>
+                          <label ng-if="isStreaming">
+                              <i class="fa fa-stop"></i> Stop Webcam
+                          </label>
                         </md-button>
                         <md-button hide show-gt-md ng-show="isStreaming" href="https://console.aws.amazon.com/kinesisvideo/streams/streamName/{{Config.KVS_STREAM_NAME}}?region={{Config.AWS_REGION}}" target="_blank" class="md-raised">
                             KVS Console&nbsp;<i class="fa fa-external-link-alt"></i>
