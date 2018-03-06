@@ -268,7 +268,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
             _pieces = [{ color: pieces[i].color }].concat(_pieces);
         }
         _pieces.forEach(function(piece, index) {
-            piece.offset = index / (_pieces.length - 1);
+            piece.offset = index / ((_pieces.length - 1) || 1);
         });
         return {
             normal: {
