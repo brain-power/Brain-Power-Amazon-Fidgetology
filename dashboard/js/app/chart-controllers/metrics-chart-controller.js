@@ -341,6 +341,10 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
     $scope.metricChanged = function() {
         chartUpdateLocked = true;
         console.log("Plotting metric changed", $scope.selectedMetric);
+        $scope.raw_metrics_chart_opts.title.text = $scope.selectedMetric.displayName;
+        $scope.raw_metrics_chart_opts.yAxis.name = $scope.selectedMetric.yAxisLabel;
+        $scope.raw_metrics_chart_opts.yAxis.max = isNaN($scope.selectedMetric.yMax) ? 'dataMax' : $scope.selectedMetric.yMax;
+        $scope.raw_metrics_chart_opts.yAxis.min = isNaN($scope.selectedMetric.yMin) ? 'dataMin' : $scope.selectedMetric.yMin;
         $scope.plotHistoryChanged();
         chartUpdateLocked = false;
     };
