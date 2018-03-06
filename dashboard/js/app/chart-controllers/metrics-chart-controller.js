@@ -31,16 +31,16 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
 
     $scope.plottingHistorySettings = [{
         interval: 30 * 1000, // in milliseconds
-        displayName: '30s'
+        displayName: 'Last 30 sec'
     }, {
         interval: 60 * 1000,
-        displayName: '1m'
+        displayName: 'Last 1 min'
     }, {
         interval: 3 * 60 * 1000,
-        displayName: '3m'
+        displayName: 'Last 3 min'
     }, {
         interval: 5 * 60 * 1000,
-        displayName: '5m'
+        displayName: 'Last 5 min'
     }];
     $scope.threshold_colors = ["#009966", "#ffde33", "#ff9933", "#cc0033", "#660099"];
 
@@ -190,7 +190,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         var plotOptions = getPlotOptions(facesData);
         $scope.raw_metrics_chart_opts.xAxis.data = plotOptions.xAxis.data || $scope.raw_metrics_chart_opts.xAxis.data;
         $scope.raw_metrics_chart_opts.series = plotOptions.series || $scope.raw_metrics_chart_opts.series;
-        $scope.raw_metrics_chart_opts.visualMap = plotOptions.visualMap || $scope.raw_metrics_chart_opts.visualMap;
+        $scope.raw_metrics_chart_opts.visualMap = plotOptions.visualMap;
         $scope.raw_metrics_echart.setOption($scope.raw_metrics_chart_opts);
     };
 
@@ -322,20 +322,20 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
 
     $scope.plotHistoryChanged = function() {
         chartUpdateLocked = true;
-        console.log("New plotting history", $scope.selectedPlotHistory);
         $scope.raw_metrics_chart_opts.xAxis.data = recordsBuffer.map(function(record) {
             var face = record.data.FaceSearchResponse[0].DetectedFace;
             return Math.round(1000 * face.Timestamp);
         });
-        $scope.raw_metrics_chart_opts.series = $scope.selectedMetric.plottingFactors.map(function(factor) {
-            return {
-                name: factor,
-                type: 'line',
-                data: recordsBuffer.map(function(record) {
-                    return record.data.FaceSearchResponse[0].DetectedFace[factor]
-                })
-            }
-        });
+        $scope.raw_metrics_chart_opts.series = $scope.selectedMetric.plottingFactors
+            .map(function(factor) {
+                return {
+                    name: factor,
+                    type: 'line',
+                    data: recordsBuffer.map(function(record) {
+                        return record.data.FaceSearchResponse[0].DetectedFace[factor]
+                    })
+                }
+            });
         $scope.latestMetricTimestamp = $scope.raw_metrics_chart_opts.xAxis.data[$scope.raw_metrics_chart_opts.xAxis.data.length - 1];
         while ($scope.raw_metrics_chart_opts.xAxis.data[0] < $scope.latestMetricTimestamp - $scope.selectedPlotHistory.interval) {
             $scope.raw_metrics_chart_opts.xAxis.data.shift();
@@ -354,7 +354,8 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
 
     $scope.metricChanged = function() {
         chartUpdateLocked = true;
-        console.log("Plotting metric changed", $scope.selectedMetric);
+        echarts.dispose($scope.raw_metrics_echart);
+        $scope.raw_metrics_echart = echarts.init($("#chart-metrics-raw").get(0));
         $scope.raw_metrics_chart_opts.title.text = $scope.selectedMetric.displayName;
         $scope.raw_metrics_chart_opts.yAxis.name = $scope.selectedMetric.yAxisLabel;
         $scope.raw_metrics_chart_opts.yAxis.max = isNaN($scope.selectedMetric.yMax) ? 'dataMax' : $scope.selectedMetric.yMax;
