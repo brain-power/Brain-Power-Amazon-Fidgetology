@@ -57,7 +57,7 @@ When new records appear in this raw data stream, a Motion Analytics Lambda funct
  
 ### Visualizing the Metrics 
  
-For this project, we provide a web app (in the same interface as the video streaming app) that consumes body motion metrics directly from the processed Kinesis Data Stream and renders them in near real-time as streaming chart visualizations. Of course, one should consider fronting the processed data stream with an API Gateway endpoint (as illustrated in the system architecture diagram) to allow multiple clients and downstream applications to consume the processed metrics scalably. 
+For this project, we provide a dashboard app (in the same interface as the video streaming app) that consumes body motion metrics directly from the processed Kinesis Data Stream and renders them in near real-time as streaming chart visualizations. Of course, one should consider fronting the processed data stream with an API Gateway endpoint (as illustrated in the system architecture diagram) to allow multiple clients and downstream applications to consume the processed metrics scalably. 
  
 ## Try it Yourself 
  
@@ -90,7 +90,7 @@ Click the button to begin the stack creation process:
  
 By default, the CloudFormation template 
 creates all necessary AWS resources for this project (Kinesis Video Stream, Rekognition Stream Processor, Kinesis Data Streams, Serverless Lambda functions, and an API Gateway endpoint). It copies the dashboard web application to an 
-[Amazon S3](https://aws.amazon.com/s3/) bucket and outputs a secure URL (fronted by API Gateway) for accessing the web app. 
+S3 bucket and outputs a secure URL (fronted by API Gateway) for accessing the web app. 
  
 ### Test the Live Webcam Stream 
  
@@ -98,7 +98,7 @@ Once you've opened the web app, click to the **Stream Webcam** button, and give 
  
 ![Webcam Stream Interface](attachments/screenshots/WebcamStreamButtonsCensored.png?raw=true "Webcam Stream Interface") 
  
-For proper syncing, ensure that **Producer time stamps** are selected. Within a few seconds delay, you should see your live webcam feed played back on the KVS console. 
+To ensure proper syncing on the KVS console, select **Producer time stamps**. Within a few seconds delay, you should see your live webcam feed played back on the KVS console. 
  
 ![Using Producer Timestamps](attachments/screenshots/ProducerTimestampExample.png?raw=true "Using Producer Timestamps") 
  
