@@ -58,10 +58,10 @@ app.controller('FidgetometerController', ['$scope', '$http', '$timeout', '$filte
     }
 
     // Fidget Quotient Constants
-    var ROTATION_WEIGHT = 0.7;
-    var TRANSLATION_WEIGHT = 0.3;
-    var ROTATION_NORM = 20; // (deg/sec)
-    var TRANSLATION_NORM = 0.1; // (frame distance/sec)
+    var ROTATION_WEIGHT = 0.6;
+    var TRANSLATION_WEIGHT = 0.4;
+    var ROTATION_NORM = 25; // (deg/sec)
+    var TRANSLATION_NORM = 0.5; // (face lengths/sec)
     function computeFidgetQuotient(face) {
         return ROTATION_WEIGHT * (face.RotationalVelocity / ROTATION_NORM) +
             TRANSLATION_WEIGHT * (face.TranslationalVelocity / TRANSLATION_NORM);

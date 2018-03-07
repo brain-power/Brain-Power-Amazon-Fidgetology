@@ -14,19 +14,20 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         displayName: "Rotational Motion",
         plottingFactors: ["RotationalVelocity"],
         thresholds: [10, 20, 30, 45],
-        yAxisLabel: "Change  in  Head  Orientation  (deg / sec)",
+        yAxisLabel: "Change  in  Head Orientation  (deg / sec)",
         yMax: 60,
         yMin: 0,
         precision: 0,
-        units: "deg/sec"
+        units: "deg / sec"
     }, {
         displayName: "Translational Motion",
         plottingFactors: ["TranslationalVelocity"],
-        thresholds: [0.05, 0.075, 0.10, 0.20],
-        yAxisLabel: "Velocity  of  Face Center  (proportion of frame / sec)",
-        yMax: 0.3,
+        thresholds: [0.20, 0.40, 0.80, 1.20],
+        yAxisLabel: "Velocity  of  Face Center  (face lengths / sec)",
+        yMax: 1.6,
         yMin: 0,
-        precision: 2
+        precision: 2,
+        units: "face lengths / sec"
     }];
 
     $scope.plottingHistorySettings = [{
@@ -226,7 +227,8 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                     data: ($scope.selectedMetric.thresholds || []).map(function(v) {
                         return { yAxis: v };
                     })
-                }
+                }, 
+                smooth: true
             };
             opts.series.push(seriesItem);
         });
@@ -325,7 +327,8 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                     type: 'line',
                     data: recordsBuffer.map(function(record) {
                         return record.data.FaceSearchResponse[0].DetectedFace[factor]
-                    })
+                    }),
+                    smooth: true
                 }
             });
         $scope.latestMetricTimestamp = $scope.raw_metrics_chart_opts.xAxis.data[$scope.raw_metrics_chart_opts.xAxis.data.length - 1];
