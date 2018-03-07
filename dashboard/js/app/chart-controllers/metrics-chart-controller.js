@@ -46,15 +46,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
 
     $scope.selectedMetric = $scope.metricsConfigs[1];
 
-    // $scope.changeMetric = function(config){
-    //     $scope.selectedMetric = config 
-    // }
-
     $scope.selectedPlotHistory = $scope.plottingHistorySettings[1];
-
-    // $scope.changeTimeInterval = function(interval){
-    //     $scope.selectedPlotHistory = interval
-    // }
 
     var flatten = function(obj, name, stem) {
         var merge = function(objects) {
