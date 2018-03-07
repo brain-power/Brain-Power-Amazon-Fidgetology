@@ -134,7 +134,7 @@ exports.handler = (event, context, callback) => {
     } 
     // Do post-processing on detected faces. 
     faceRecords.forEach((record, index) => { 
-        var detectedFace = record.data.FaceSearchResponse[0]; 
+        var detectedFace = record.data.FaceSearchResponse[0].DetectedFace; 
         detectedFace.RecordIndex = index; 
         processDetectedFace(detectedFace, record.data.InputInformation.KinesisVideo); 
     }); 
@@ -147,18 +147,21 @@ exports.handler = (event, context, callback) => {
       var deltaTime = currentFace.Timestamp - previousFace.Timestamp; 
       if (deltaTime === 0) return; 
       var deltaPosition = Math.sqrt( 
-        Math.pow(currentFace.BoundingBox.Center[0] - previousFace.BoundingBox[0], 2) +  
-        Math.pow(currentFace.BoundingBox.Center[1] - previousFace.BoundingBox[1], 2) 
+        Math.pow(currentFace.BoundingBox.Center[0] - previousFace.BoundingBox.Center[0], 2) +  
+        Math.pow(currentFace.BoundingBox.Center[1] - previousFace.BoundingBox.Center[1], 2) 
       ); 
-      currentFace.TranslationalVelocity = deltaPosition / deltaTime; 
+      var faceLength = Math.sqrt(Math.pow(currentFace.BoundingBox.Height, 2) + Math.pow(currentFace.BoundingBox.Width, 2));
+      currentFace.TranslationalVelocity = (deltaPosition / faceLength) / deltaTime; 
       var deltaRotation = Math.sqrt( 
         Math.pow(currentFace.Pose.Pitch - previousFace.Pose.Pitch, 2) +  
         Math.pow(currentFace.Pose.Roll  - previousFace.Pose.Roll,  2) + 
         Math.pow(currentFace.Pose.Yaw   - previousFace.Pose.Yaw,   2) 
       ); 
       currentFace.RotationalVelocity = deltaRotation / deltaTime; 
-      previousFace = currentFace; 
+      previousFace = currentFace;
     }); 
+    
+    faceRecords.shift();
      
     putRecordsIntoProcessedStream(faceRecords).then(function() { 
         var firstFace = faceRecords[0]; 
@@ -174,7 +177,8 @@ function processDetectedFace(face, inputInfo) {
     var centerX = face.BoundingBox.Left + face.BoundingBox.Width / 2; 
     var centerY = face.BoundingBox.Top + face.BoundingBox.Height / 2; 
     face.BoundingBox.Center = [centerX, centerY]; 
-    face.Timestamp = Math.min(inputInfo.ProducerTimestamp + inputInfo.FrameOffsetInSeconds); 
+    face.Timestamp = Math.min(inputInfo.ProducerTimestamp + inputInfo.FrameOffsetInSeconds, inputInfo.ProducerTimestamp + face.RecordIndex);
+    console.log(face.Timestamp);
 } 
  
 // Put processed body motion metrics into downstream KDS 
@@ -194,7 +198,6 @@ function putRecordsIntoProcessedStream(records) {
         }); 
     }); 
 } 
- 
 ``` 
  
 To customize this stream processing function for your own use case, go to the [AWS Lambda Console](https://console.aws.amazon.com/lambda/home), and find the **StreamAnalyzer** function associated with this project stack. 
