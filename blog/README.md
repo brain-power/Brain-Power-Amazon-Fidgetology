@@ -57,7 +57,7 @@ When new records appear in this raw data stream, a Motion Analytics Lambda funct
  
 ### Visualizing the Metrics 
  
-For this project, we provide a web app (in the same interface as the video streaming app) that consumes body motion metrics directly from the processed Kinesis Data Stream and renders them in near real-time as streaming chart visualizations. Of course, one should consider fronting the processed data stream with an API Gateway endpoint (as illustrated in the system architecture diagram) to allow multiple clients and downstream applications to consume the processed metrics scalably. 
+For this project, we provide a dashboard app (in the same interface as the video streaming app) that consumes body motion metrics directly from the processed Kinesis Data Stream and renders them in near real-time as streaming chart visualizations. Of course, one should consider fronting the processed data stream with an API Gateway endpoint (as illustrated in the system architecture diagram) to allow multiple clients and downstream applications to consume the processed metrics scalably. 
  
 ## Try it Yourself 
  
@@ -90,7 +90,7 @@ Click the button to begin the stack creation process:
  
 By default, the CloudFormation template 
 creates all necessary AWS resources for this project (Kinesis Video Stream, Rekognition Stream Processor, Kinesis Data Streams, Serverless Lambda functions, and an API Gateway endpoint). It copies the dashboard web application to an 
-[Amazon S3](https://aws.amazon.com/s3/) bucket and outputs a secure URL (fronted by API Gateway) for accessing the web app. 
+S3 bucket and outputs a secure URL (fronted by API Gateway) for accessing the web app. 
  
 ### Test the Live Webcam Stream 
  
@@ -98,8 +98,8 @@ Once you've opened the web app, click to the **Stream Webcam** button, and give 
  
 ![Webcam Stream Interface](attachments/screenshots/WebcamStreamButtonsCensored.png?raw=true "Webcam Stream Interface") 
  
-For proper syncing, ensure that **Producer time stamps** are selected. Within a few seconds' delay, you should see your live webcam feed played back on the KVS console. 
- 
+To ensure proper syncing on the KVS console, select **Producer time stamps**. Within a few seconds delay, you should see your live webcam feed played back on the KVS console. 
+
 ![Using Producer Timestamps](attachments/screenshots/ProducerTimestampExample.png?raw=true "Using Producer Timestamps") 
  
 We would love to hear how well the live-streaming works for you! Refer to the [project Github repository](../README.md#misc-kvs-notes) for suggestions on how one might improve the playback latency. 
@@ -134,7 +134,7 @@ exports.handler = (event, context, callback) => {
     } 
     // Do post-processing on detected faces. 
     faceRecords.forEach((record, index) => { 
-        var detectedFace = record.data.FaceSearchResponse[0]; 
+        var detectedFace = record.data.FaceSearchResponse[0].DetectedFace; 
         detectedFace.RecordIndex = index; 
         processDetectedFace(detectedFace, record.data.InputInformation.KinesisVideo); 
     }); 
@@ -147,18 +147,21 @@ exports.handler = (event, context, callback) => {
       var deltaTime = currentFace.Timestamp - previousFace.Timestamp; 
       if (deltaTime === 0) return; 
       var deltaPosition = Math.sqrt( 
-        Math.pow(currentFace.BoundingBox.Center[0] - previousFace.BoundingBox[0], 2) +  
-        Math.pow(currentFace.BoundingBox.Center[1] - previousFace.BoundingBox[1], 2) 
+        Math.pow(currentFace.BoundingBox.Center[0] - previousFace.BoundingBox.Center[0], 2) +  
+        Math.pow(currentFace.BoundingBox.Center[1] - previousFace.BoundingBox.Center[1], 2) 
       ); 
-      currentFace.TranslationalVelocity = deltaPosition / deltaTime; 
+      var faceLength = Math.sqrt(Math.pow(currentFace.BoundingBox.Height, 2) + Math.pow(currentFace.BoundingBox.Width, 2));
+      currentFace.TranslationalVelocity = (deltaPosition / faceLength) / deltaTime; 
       var deltaRotation = Math.sqrt( 
         Math.pow(currentFace.Pose.Pitch - previousFace.Pose.Pitch, 2) +  
         Math.pow(currentFace.Pose.Roll  - previousFace.Pose.Roll,  2) + 
         Math.pow(currentFace.Pose.Yaw   - previousFace.Pose.Yaw,   2) 
       ); 
       currentFace.RotationalVelocity = deltaRotation / deltaTime; 
-      previousFace = currentFace; 
+      previousFace = currentFace;
     }); 
+    
+    faceRecords.shift();
      
     putRecordsIntoProcessedStream(faceRecords).then(function() { 
         var firstFace = faceRecords[0]; 
@@ -174,7 +177,8 @@ function processDetectedFace(face, inputInfo) {
     var centerX = face.BoundingBox.Left + face.BoundingBox.Width / 2; 
     var centerY = face.BoundingBox.Top + face.BoundingBox.Height / 2; 
     face.BoundingBox.Center = [centerX, centerY]; 
-    face.Timestamp = Math.min(inputInfo.ProducerTimestamp + inputInfo.FrameOffsetInSeconds); 
+    face.Timestamp = Math.min(inputInfo.ProducerTimestamp + inputInfo.FrameOffsetInSeconds, inputInfo.ProducerTimestamp + face.RecordIndex);
+    console.log(face.Timestamp);
 } 
  
 // Put processed body motion metrics into downstream KDS 
@@ -194,7 +198,6 @@ function putRecordsIntoProcessedStream(records) {
         }); 
     }); 
 } 
- 
 ``` 
  
 To customize this stream processing function for your own use case, go to the [AWS Lambda Console](https://console.aws.amazon.com/lambda/home), and find the **StreamAnalyzer** function associated with this project stack. 
