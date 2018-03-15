@@ -212,19 +212,23 @@ Our ideas for expanding this architecture are [described in full in the accompan
  
 ### Kinesis Analytics or Sagemaker integration 
  
-Of potential interest is the possibility of building a [Kinesis Data Analytics](https://aws.amazon.com/kinesis/data-analytics/) application that consumes the raw output of the Rekognition video stream processor, with unsupervised anomaly detection capabilities. 
+Of potential interest is the possibility of building a [Kinesis Data Analytics](https://aws.amazon.com/kinesis/data-analytics/) application that consumes the raw output of the Rekognition video stream processor, with unsupervised anomaly detection capabilities. Alerts can be created in real-time with processing latencies of less than one second, and this immediate feedback provides the potential for immediate response to distress signals. Within the context of a clinical trial, physicians may utilize this feedback functionality when prescribing a new treatment to evaluate the response of the patient and their readiness for it.  
  
 *@Ned/Joey might elaborate.* 
  
 ### Tracking multiple bodies 
  
-One might also consider modifying the `StreamAnalyzer` function to allow for tracking of multiple faces/bodies in a feed. 
+One might also consider modifying the `StreamAnalyzer` function to allow for tracking of multiple faces/bodies in a feed. Rekognition identifies unique individuals in a video stream and assigns to each his or her own ID. Taking advantage of this feature, multiple bodies could be tracked in a large group setting, such as in a classroom or movie showing, to gauge the overall movement and engagement within the room. Teachers could utilize such feedback when assessing the quality or success of their lesson plans, or to pinpoint the students with wandering attention spans who may need more support. Advertisment producers could utilize such feedback to evaluate the level of interest in their content or product, both in a stand-alone context and in comparison to other advertisments aired within a similar time period. 
  
 *@Ned/Joey might expand on use cases where multiple bodies would need to be tracked e.g. in a classroom.* 
  
 ## Results / Brain Power's Use Case 
  
 The following results were obtained by streaming a pre-recorded video of one of our product trials.  
+
+In the top video, the child is observed in his natural state and not wearing the headset. This is our control session. In the bottom video, the child is observed whilst wearing the headset and engaging in game content. 
+
+The change in head orientation over time is calculated as the average change in the pitch, yaw, and roll of the face over time. As the graphs show, this calculated rotational velocity remains stable and below the first threshold for the entire duration the child has the headset on, but oscillates between numerous threshold intervals while the child is not wearing the headset. The results agree with the observable magnitude of movement within each respective video, and this information could be used to evaluate the usefulness of the headset and game content in terms of bringing the child to a focus. 
  
 *@Ned/Joey to provide insight on these results to a suitable level of interest, and philosophy of our use case.* 
  
