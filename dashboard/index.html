@@ -149,9 +149,10 @@
                         <h1 flex md-truncate>Analytics</h1>
                     </div>
                 </md-toolbar>
-                <div flex ng-controller="FidgetometerController" ng-init="init()">
+                <div layout="col" ng-controller="FidgetometerController" ng-init="init()">
                     <br>
-                    <div id="fidgetometer" class="chart-container" style="width:100%; height: 500px"></div>
+                    <div flex id="fidgetometer" class="chart-container" style="width:100%; height: 500px"></div>
+                    <div flex hide show-gt-sm id="chart-metrics-fidget" class="chart-container" style="width:100%; height: 500px"></div>
                 </div>
             </div>
         </div>

@@ -15,7 +15,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         plottingFactors: ["RotationalVelocity"],
         thresholds: [10, 20, 30, 45],
         yAxisLabel: "Change  in  Head  Orientation  (deg / sec)",
-        yMax: 60,
+        yMax: 360,
         yMin: 0,
         precision: 0,
         units: "deg/sec"
@@ -62,7 +62,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         var newStem = (typeof stem !== 'undefined' && stem !== '') ? stem + '.' + name : name;
         if (typeof obj !== 'object') {
             out[newStem] = obj;
-            return out;
+            return out; 
         }
         for (var p in obj) {
             var prop = flatten(obj[p], p, newStem);
@@ -170,6 +170,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         records.forEach(function(record, index) {
             var face = record.data.FaceSearchResponse[0].DetectedFace;
             record.data.FaceSearchResponse[0].DetectedFace = flatten(face);
+
             Object.keys(record.data.InputInformation.KinesisVideo).forEach(function(key) {
                 record.data.FaceSearchResponse[0].DetectedFace[key] = record.data.InputInformation.KinesisVideo[key];
             });
