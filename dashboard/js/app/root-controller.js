@@ -103,7 +103,7 @@ app.controller('RootController', ['$scope', '$http', '$timeout', '$interval', '$
                 $scope.uploadError = undefined;
                 $scope.uploadStatus = "Uploading to S3 ...";
                 var s3Params = {
-                    Key: "raw_uploads/" + new Date().getTime() + "_" + file.name,
+                    Key: "raw_uploads/" + new Date().getTime() + "_" + file.name.replace(/ /g,"_"),
                     Body: file,
                     ContentType: file.type,
                     Metadata: {

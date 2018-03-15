@@ -14,13 +14,8 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         displayName: "Rotational Motion",
         plottingFactors: ["RotationalVelocity"],
         thresholds: [10, 20, 30, 45],
-<<<<<<< HEAD
-        yAxisLabel: "Change  in  Head  Orientation  (deg / sec)",
-        yMax: 360,
-=======
         yAxisLabel: "Change  in  Head Orientation  (deg / sec)",
         yMax: 60,
->>>>>>> 1c385b07d7e14ad80544db3841694b5b83181073
         yMin: 0,
         precision: 0,
         units: "deg / sec"
