@@ -243,7 +243,7 @@ The following results were obtained by streaming a pre-recorded video of one of 
  
 ![Headset Off Results Animation](attachments/results/GlassOffRTAnimation.gif?raw=true "Headset Off Results Animation") 
 
-**@Runpeng, for the next draft, can you surface the face markers (eye, nose, mouth corners) for one of the GIFs? If it is distracting to the image, we can do a separate figure showing just that. It will impress viewers. Also, in the current GIFs you use circular disks. It would show off more features if they were ovals, so we could show that the system detects tilt of the head; and it would be great if the rotation of the head would result in a squishing of the oval, thus demonstrating that the system picks of rotation angle as well.**  
+**@Runpeng, for the next draft, can you surface the face markers (eye, nose, mouth corners) for one of the GIFs? If it is distracting to the image, we can do a separate figure showing just that. It will impress viewers. Also, in the current GIFs you use circular disks. It would show off more features if they were ovals, so we could show that the system detects tilt of the head. Furthermore, it would be great if the rotation of the head would result in a horizontal squishing of the oval (as it rotates out of view), thus demonstrating that the system picks up rotation angle as well. Finally, the Rekognition Video notes mentioned it also detects eyes-open and is-smiling: we probably don't want to surface those here but I will be curious how well those work and how we might incorporate them into our future algorithms/displays.**  
  
 ![Headset On Results Animation](attachments/results/GlassOnRTAnimation.gif?raw=true "Headset On Results Animation") 
 
