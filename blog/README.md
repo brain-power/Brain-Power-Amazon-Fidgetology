@@ -3,8 +3,8 @@
  
 Ned T. Sahin, PhD<sup>1,2</sup>, Runpeng Liu<sup>1,3</sup>, Joseph Salisbury, PhD<sup>1</sup>, Lillian Bu<sup>1,3</sup> 
 
-<sup>1</sup>Brain Empowerment Lab, Brain Power LLC, Cambridge, MA, United States <b />
-<sup>2</sup>Department of Psychology, Harvard University, Cambridge, MA, United States <b />
+<sup>1</sup>Brain Empowerment Lab, Brain Power LLC, Cambridge, MA, United States <br />
+<sup>2</sup>Department of Psychology, Harvard University, Cambridge, MA, United States <br />
 <sup>3</sup>Department of Electrical Engineering and Computer Science, Massachusetts Institute of Technology, Cambridge, MA, United States 
 
  
@@ -251,7 +251,7 @@ The following results were obtained by streaming a pre-recorded video of one of 
 
 **@Runpeng, Please title these animations. I can help you decide title, but please take a crack at it when you can. For instance they could be titled: "Real-Time Fidgetology Analysis: // Child Not Using Brain Power's AR System for Autism" and "Real-Time Fidgetology Analysis: // Child Using Brain Power's AR System for Autism" or something like that.**
 
-**For These plots, and for the plots below and the teaser at the top:  a.) Please make all the axis labels much bigger and easier to read, b.) either remove the 4 little icons in the upper left of the Index view, or if those are required because this is a real-time view of the actual interface you built, then brag about that! A real-time display that looks like that is very impressive. Please label it as such. c.) Please indicate that there are multiple possbile fidget indices but labeling the current one as "Fidget/Motion Index 1" or even better "Fidget/Motion Index 3" - to make it clear that there are multiple alternatives and we chose one that was best for the current video. Then a subtitle to the label (directly beneath, and in italics), such as "angular velocity" or "rotational speed" or whatever it actually was. Therefore the whole title for each would be something like "Fidget/Motion Index 3: // Rotational Speed of Face". Thanks!**  
+**@Runpeng. For These plots, and for the plots below and the teaser at the top:  a.) Please make all the axis labels much bigger and easier to read, b.) either remove the 4 little icons in the upper left of the Index view, or if those are required because this is a real-time view of the actual interface you built, then brag about that! A real-time display that looks like that is very impressive. Please label it as such. c.) Please indicate that there are multiple possbile fidget indices but labeling the current one as "Fidget/Motion Index 1" or even better "Fidget/Motion Index 3" - to make it clear that there are multiple alternatives and we chose one that was best for the current video. Then a subtitle to the label (directly beneath, and in italics), such as "angular velocity" or "rotational speed" or whatever it actually was. Therefore the whole title for each would be something like "Fidget/Motion Index 3: // Rotational Speed of Face". Thanks!**  
  
 ![Results Montage](attachments/results/Glass_ON_OFF_SideBySide_Montage.png?raw=true "Results Montage") 
  
