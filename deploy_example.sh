@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default stack name
-STACK_NAME="bp-fidgetology-demo"
+STACK_NAME="brain-power-fidgetology-demo"
 
 # Only regions with both Kinesis Video Stream and Rekognition service are supported
 SUPPORTED_REGIONS=("us-west-2" "us-east-1")
