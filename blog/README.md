@@ -179,7 +179,6 @@ function processDetectedFace(face, inputInfo) {
     var centerY = face.BoundingBox.Top + face.BoundingBox.Height / 2; 
     face.BoundingBox.Center = [centerX, centerY]; 
     face.Timestamp = Math.min(inputInfo.ProducerTimestamp + inputInfo.FrameOffsetInSeconds, inputInfo.ProducerTimestamp + face.RecordIndex);
-    console.log(face.Timestamp);
 } 
  
 // Put processed body motion metrics into downstream KDS 
