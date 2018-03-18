@@ -10,7 +10,7 @@ Ned T. Sahin, PhD<sup>1,2</sup>, Runpeng Liu<sup>1,3</sup>, Joseph Salisbury, Ph
  
 ## Introduction 
  
-![Teaser Graphic](attachments/FidgetologyTeaser.png?raw=true "Teaser Graphic") 
+![Teaser Graphic](attachments/FidgetologyTeaser_V2.png?raw=true "Teaser Graphic") 
  
 Producers of content (ads, TV shows, movies, video games, political campaigns, speeches, online courses; as well as classroom teaching) usually judge the success of their content by surveys or tests after the fact; or by user actions such as click-throughs or bounces. These are often subjective, delayed, informal, post-hoc, and/or binary proxies for what content producers may wish to measure: the perceived value of their content. Such metrics miss continuous and rich data about viewers' attention, engagement, and enjoyment over time -- which can be contained within their ongoing body language. However, there is no systematic way to quantify body language, nor to summarize patterns or key gestures within the often-overwhelming dataset of video in a single metric. 
  
@@ -238,11 +238,11 @@ The following results were obtained by streaming a pre-recorded video of one of 
  
 *@Ned/Joey to provide insight on these results to a suitable level of interest, and philosophy of our use case.* 
  
-![Headset Off Results Animation](attachments/results/GlassOffRTAnimation.gif?raw=true "Headset Off Results Animation") 
+![Headset Off Results Animation](attachments/results/GlassOffAnimation.gif?raw=true "Headset Off Results Animation") 
 
 **@Runpeng, for the next draft, can you surface the face markers (eye, nose, mouth corners) for one of the GIFs? If it is distracting to the image, we can do a separate figure showing just that. It will impress viewers. Also, in the current GIFs you use circular disks. It would show off more features if they were ovals, so we could show that the system detects tilt of the head. Furthermore, it would be great if the rotation of the head would result in a horizontal squishing of the oval (as it rotates out of view), thus demonstrating that the system picks up rotation angle as well. Finally, the Rekognition Video notes mentioned it also detects eyes-open and is-smiling: we probably don't want to surface those here but I will be curious how well those work and how we might incorporate them into our future algorithms/displays.**  
  
-![Headset On Results Animation](attachments/results/GlassOnRTAnimation.gif?raw=true "Headset On Results Animation") 
+![Headset On Results Animation](attachments/results/GlassOnAnimation.gif?raw=true "Headset On Results Animation") 
 
 **@Runpeng The animated GIFs of real-time stats seem to plot similar but not the same data as the lower single-snapshot graphs. If they were totally different, that would be fine. But since they are similar enough, I think viewers may doubt us a bit. Best if they are identical windows of the data. Would this take a long time to re-create? Is it simply a matter of letting the GIF go longer (is it the same data just not all of it) or was it a different window altogether)?**
 
@@ -250,7 +250,7 @@ The following results were obtained by streaming a pre-recorded video of one of 
 
 **@Runpeng. For These plots, and for the plots below and the teaser at the top:  a.) Please make all the axis labels much bigger and easier to read, b.) either remove the 4 little icons in the upper left of the Index view, or if those are required because this is a real-time view of the actual interface you built, then brag about that! A real-time display that looks like that is very impressive. Please label it as such. c.) Please indicate that there are multiple possbile fidget indices but labeling the current one as "Fidget/Motion Index 1" or even better "Fidget/Motion Index 3" - to make it clear that there are multiple alternatives and we chose one that was best for the current video. Then a subtitle to the label (directly beneath, and in italics), such as "angular velocity" or "rotational speed" or whatever it actually was. Therefore the whole title for each would be something like "Fidget/Motion Index 3: // Rotational Speed of Face". Thanks!**  
  
-![Results Montage](attachments/results/Glass_ON_OFF_SideBySide_Montage.png?raw=true "Results Montage") 
+![Results Montage](attachments/results/Glass_ON_OFF_SideBySide_Montage_V2.png?raw=true "Results Montage") 
  
 ## Summary 
  
