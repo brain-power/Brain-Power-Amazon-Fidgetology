@@ -10,13 +10,13 @@ Ned T. Sahin, PhD<sup>1,2</sup>, Runpeng Liu<sup>1,3</sup>, Joseph Salisbury, Ph
  
 ## Introduction 
  
-![Teaser Graphic](attachments/FidgetologyTeaser_V2.png?raw=true "Teaser Graphic") 
+![Teaser Graphic](attachments/FidgetologyTeaser_V3.png?raw=true "Teaser Graphic") 
  
 Producers of content (ads, TV shows, movies, video games, political campaigns, speeches, online courses; as well as classroom teaching) usually judge the success of their content by surveys or tests after the fact; or by user actions such as click-throughs or bounces. These are often subjective, delayed, informal, post-hoc, and/or binary proxies for what content producers may wish to measure: the perceived value of their content. Such metrics miss continuous and rich data about viewers' attention, engagement, and enjoyment over time -- which can be contained within their ongoing body language. However, there is no systematic way to quantify body language, nor to summarize patterns or key gestures within the often-overwhelming dataset of video in a single metric. 
  
-We invented a method, affectionately called "Fidgetology", to quantitatively summarize fidgeting and other body motions as a behavioral biomarker. We originally invented fidgetology to analyze tens of terabytes of clinical videos of children with autism and/or ADHD, as a new clinical outcome measure of their improvement in symptoms after using our augmented-reality apps. Here, we provide a more generalized architecture, and example code, that you can immediately try for your purposes. It uses newly-released artificial intelligence (AI) products from Amazon Inc. to automatically analyze body motions, for instance in video of people viewing your media content or classroom teaching. 
+We invented a method, affectionately called "Fidgetology", to quantitatively summarize fidgeting and other body motions as a behavioral biomarker. We originally invented fidgetology to analyze tens of terabytes of clinical videos of children with autism and/or ADHD, as a new clinical outcome measure of their improvement in symptoms after using our augmented-reality apps. Here, we provide a more generalized architecture, and example code, that you can immediately try for your purposes. It uses newly-released artificial intelligence products from Amazon Inc. to automatically analyze body motions, for instance in video of people viewing your media content or classroom teaching. 
 
-Namely, it allows you to stream or upload video of your audience and immediately get a mathematical plot and single-image summary of their level and patterns of motions, which can be a proxy for attention, focus, engagement, anxiety, or enjoyment. The resulting single image is a small-filesize, digestible 2D summary of potentially a very large 4D+ data set. We also make suggestions for how to add advanced Lambda functions or machine-learning (ML) models to rapidly classify more nuanced states, and customize to your unique use-case and/or individual users. 
+Namely, it allows you to stream or upload video of your audience and immediately get a mathematical plot and single-image summary of their level and patterns of motions, which can be a proxy for attention, focus, engagement, anxiety, or enjoyment. The resulting single image is a small-filesize, digestible 2D summary of potentially a very large 4D+ data set. We also make suggestions for how to add advanced Lambda functions or machine-learning models to rapidly classify more nuanced states, and customize to your unique use-case and/or individual users. 
 
 ## How it Works 
  
@@ -24,13 +24,13 @@ Namely, it allows you to stream or upload video of your audience and immediately
  
 ### Kinesis Video Streams Ingestion 
  
-A client video stream-producing web app allows users to 1) upload pre-recorded video and/or 2) live stream their webcam feed to [Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo). This webcam streaming functionality is backed by the [WebRTC](https://webrtc.github.io/samples/) `getUserMedia` API, and is supported on all major browsers and platforms, with the exception of iOS mobile. 
+A client video stream-producing web app allows users to 1) upload pre-recorded video and/or 2) live stream their webcam feed to [Amazon Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo). This webcam streaming functionality is backed by the [WebRTC](https://webrtc.github.io/samples/) `getUserMedia` API, and is supported on all major browsers and platforms, with the exception of iOS mobile. 
  
 Why a browser app? Of course, it is also possible to stream video from IoT devices such as [Amazon DeepLens](https://aws.amazon.com/deeplens/), or build a custom mobile app using the [Kinesis Video Streams Producer SDK for Android](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/producer-sdk-android.html), but a simple cross-platform web app that can be launched in any browser is much more universally accessible! 
  
-When static video (via [Amazon S3](https://aws.amazon.com/s3/) upload) or buffered webcam frames (via [Amazon API Gateway](https://aws.amazon.com/api-gateway/) request) are uploaded by the web app, an [AWS Lambda](https://aws.amazon.com/lambda/) function (serving as a cloud proxy layer to Kinesis Video Streams) converts them to [streamable media fragments](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/how-data.html#how-data-frame). These media fragments are then put into a Kinesis Video Stream.  
+When static video (via [Amazon S3](https://aws.amazon.com/s3/) upload) or buffered webcam frames (via [Amazon API Gateway](https://aws.amazon.com/api-gateway/) request) are uploaded by the web app, an [AWS Lambda](https://aws.amazon.com/lambda/) function, serving as a cloud proxy layer to Kinesis Video Streams, converts them to [streamable media fragments](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/how-data.html#how-data-frame). These media fragments are then put into a Kinesis Video Stream. Note that since a Kinesis Video Streams Producer SDK is currently not available for Javascript/web browser, we explored several workarounds aimed at mimicing streaming functionality in the AWS cloud layer, and ultimately opted to pursue a fully serverless (albeit, yet-to-be optimized) solution. One might also consider provisioning a custom [AMI](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) as a WebRTC server that handles stream conversion. This alternative will probably yield the best performance and lowest latency, but is not in the spirit of the serverless architecture we present here.
 
-**@Runpeng: Please insert a sentence explaining what limitation you needed to overcome or work around. I don't remember the details. E.g. that to get the functionality we wanted, you needed to use streams and yet there were technical constraints, and this was your clever way to operate within those constraints. This will make for a good story and demonstrate the creativity of your approach. The reader will therefore see it as more valuable; it will explain itself better in the future when new ways to achieve the goals here are released; it will secure our place on the forefront where we are figuring out the very newest tools; and it will also be a reminder that other features are desired now.**
+~**@Runpeng: Please insert a sentence explaining what limitation you needed to overcome or work around. I don't remember the details. E.g. that to get the functionality we wanted, you needed to use streams and yet there were technical constraints, and this was your clever way to operate within those constraints. This will make for a good story and demonstrate the creativity of your approach. The reader will therefore see it as more valuable; it will explain itself better in the future when new ways to achieve the goals here are released; it will secure our place on the forefront where we are figuring out the very newest tools; and it will also be a reminder that other features are desired now.**~
  
 #### Uploading a pre-recorded video: 
  
@@ -44,13 +44,13 @@ Below is a side-by-side illustration of webcam streaming to the Kinesis Video St
  
 ### Rekognition Video - Stream Processor 
  
-The next step is to use advanced AI to automatically detect people in full-speed video, and track their motions in real time. We feed the Kinesis Video Stream as input to [Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html) (Amazon’s new video-capable version of the Rekognition deep-learning toolset to track objects and people in images), using a [Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/API_CreateStreamProcessor.html).
+The next step is to automatically detect people in the full-speed video, and track their motions in real time. We feed the Kinesis Video Stream as input to [Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html) (Amazon’s new video-capable version of the Rekognition deep-learning toolset to track objects and people in images), using a [Rekognition Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/API_CreateStreamProcessor.html).
 
-The goal is to analyze body motion of several kinds, but for now Rekognition Video focuses on faces. It does provide extensive face data from the video stream, including the position over time of face landmarks such as eye, nose, and mouth corners, and face polygon, plus face rotation. These raw records to a [Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/). 
+The goal is to analyze body motion of several kinds, but for now Rekognition Video focuses on faces. It does provide extensive face data from the video stream, including the position over time of face landmarks such as eye, nose, and mouth corners, and face polygon, plus face rotation. These raw records are published to a [Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/). 
  
 ### Motion Analytics 
  
-When new records appear in this raw data stream, our Motion Analytics algorithm (implemented as a Lambda function) is triggered. It computes interesting derived metrics on faces in successive video frames, such as rotational/translational motion velocities, which can be used as features to gauge attention and engagement. These processed metrics are then published to another Kinesis Data Stream, for consumption by downstream applications and web dashboards. 
+When new records appear in this raw data stream, our Motion Analytics algorithm (implemented as an AWS Lambda function) is triggered. It computes interesting derived metrics on faces in successive video frames, such as rotational/translational motion velocities, which can be used as features to gauge attention and engagement. These processed metrics are then published to another Kinesis Data Stream, for consumption by downstream applications and web dashboards. 
  
 ### Visualizing the Metrics 
  
@@ -69,7 +69,7 @@ Click the button to begin the stack creation process:
  
 1. Click **Next**, and specify **brain-power-fidgetology-demo** as both the **Stack name** and **Change set name**. Accept all default parameters and click **Next**. 
 
-**@Runpeng, change the name everywhere to "brain-power-fidgetology-demo" to get more of our branding in there.** 
+~**@Runpeng, change the name everywhere to "brain-power-fidgetology-demo" to get more of our branding in there.**~
  
 ![Create change set -- details](attachments/screenshots/CreateChangeSetDetails.png?raw=true "Create change set -- details") 
  
@@ -230,26 +230,25 @@ Also, as with the single-person analysis, there is no need to uncover the identi
  
 ## Results / Brain Power's Use Case 
 
-
-
 The following results were obtained by streaming a pre-recorded video of one of our product trials. 
 
- 
 *@Ned/Joey to provide insight on these results to a suitable level of interest, and philosophy of our use case.* 
  
-![Headset Off Results Animation](attachments/results/GlassOffAnimation.gif?raw=true "Headset Off Results Animation") 
+### Real-Time Fidgetology Analysis: Child Not Using Brain Power's AR System for Autism
+![Headset Off Results Animation](attachments/results/GlassOffAnimation_V2.gif?raw=true "Headset Off Results Animation") 
 
-**@Runpeng, for the next draft, can you surface the face markers (eye, nose, mouth corners) for one of the GIFs? If it is distracting to the image, we can do a separate figure showing just that. It will impress viewers. Also, in the current GIFs you use circular disks. It would show off more features if they were ovals, so we could show that the system detects tilt of the head. Furthermore, it would be great if the rotation of the head would result in a horizontal squishing of the oval (as it rotates out of view), thus demonstrating that the system picks up rotation angle as well. Finally, the Rekognition Video notes mentioned it also detects eyes-open and is-smiling: we probably don't want to surface those here but I will be curious how well those work and how we might incorporate them into our future algorithms/displays.**  
+~**@Runpeng, for the next draft, can you surface the face markers (eye, nose, mouth corners) for one of the GIFs? If it is distracting to the image, we can do a separate figure showing just that. It will impress viewers. Also, in the current GIFs you use circular disks. It would show off more features if they were ovals, so we could show that the system detects tilt of the head. Furthermore, it would be great if the rotation of the head would result in a horizontal squishing of the oval (as it rotates out of view), thus demonstrating that the system picks up rotation angle as well. Finally, the Rekognition Video notes mentioned it also detects eyes-open and is-smiling: we probably don't want to surface those here but I will be curious how well those work and how we might incorporate them into our future algorithms/displays.**~  
+
+### Real-Time Fidgetology Analysis: Child Using Brain Power's AR System for Autism
+![Headset On Results Animation](attachments/results/GlassOnAnimation_V2.gif?raw=true "Headset On Results Animation") 
+
+~**@Runpeng The animated GIFs of real-time stats seem to plot similar but not the same data as the lower single-snapshot graphs. If they were totally different, that would be fine. But since they are similar enough, I think viewers may doubt us a bit. Best if they are identical windows of the data. Would this take a long time to re-create? Is it simply a matter of letting the GIF go longer (is it the same data just not all of it) or was it a different window altogether)?**~
+
+~**@Runpeng, Please title these animations. I can help you decide title, but please take a crack at it when you can. For instance they could be titled: "Real-Time Fidgetology Analysis: // Child Not Using Brain Power's AR System for Autism" and "Real-Time Fidgetology Analysis: // Child Using Brain Power's AR System for Autism" or something like that.**~
+
+~**@Runpeng. For These plots, and for the plots below and the teaser at the top:  a.) Please make all the axis labels much bigger and easier to read, b.) either remove the 4 little icons in the upper left of the Index view, or if those are required because this is a real-time view of the actual interface you built, then brag about that! A real-time display that looks like that is very impressive. Please label it as such. c.) Please indicate that there are multiple possbile fidget indices but labeling the current one as "Fidget/Motion Index 1" or even better "Fidget/Motion Index 3" - to make it clear that there are multiple alternatives and we chose one that was best for the current video. Then a subtitle to the label (directly beneath, and in italics), such as "angular velocity" or "rotational speed" or whatever it actually was. Therefore the whole title for each would be something like "Fidget/Motion Index 3: // Rotational Speed of Face". Thanks!**~  
  
-![Headset On Results Animation](attachments/results/GlassOnAnimation.gif?raw=true "Headset On Results Animation") 
-
-**@Runpeng The animated GIFs of real-time stats seem to plot similar but not the same data as the lower single-snapshot graphs. If they were totally different, that would be fine. But since they are similar enough, I think viewers may doubt us a bit. Best if they are identical windows of the data. Would this take a long time to re-create? Is it simply a matter of letting the GIF go longer (is it the same data just not all of it) or was it a different window altogether)?**
-
-**@Runpeng, Please title these animations. I can help you decide title, but please take a crack at it when you can. For instance they could be titled: "Real-Time Fidgetology Analysis: // Child Not Using Brain Power's AR System for Autism" and "Real-Time Fidgetology Analysis: // Child Using Brain Power's AR System for Autism" or something like that.**
-
-**@Runpeng. For These plots, and for the plots below and the teaser at the top:  a.) Please make all the axis labels much bigger and easier to read, b.) either remove the 4 little icons in the upper left of the Index view, or if those are required because this is a real-time view of the actual interface you built, then brag about that! A real-time display that looks like that is very impressive. Please label it as such. c.) Please indicate that there are multiple possbile fidget indices but labeling the current one as "Fidget/Motion Index 1" or even better "Fidget/Motion Index 3" - to make it clear that there are multiple alternatives and we chose one that was best for the current video. Then a subtitle to the label (directly beneath, and in italics), such as "angular velocity" or "rotational speed" or whatever it actually was. Therefore the whole title for each would be something like "Fidget/Motion Index 3: // Rotational Speed of Face". Thanks!**  
- 
-![Results Montage](attachments/results/Glass_ON_OFF_SideBySide_Montage_V2.png?raw=true "Results Montage") 
+![Results Montage](attachments/results/Glass_ON_OFF_SideBySide_Montage_V3.png?raw=true "Results Montage") 
  
 ## Summary 
  
