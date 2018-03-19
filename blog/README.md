@@ -29,8 +29,6 @@ A client video stream-producing web app allows users to 1) upload pre-recorded v
 Why a browser app? Of course, it is also possible to stream video from IoT devices such as [Amazon DeepLens](https://aws.amazon.com/deeplens/), or build a custom mobile app using the [Kinesis Video Streams Producer SDK for Android](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/producer-sdk-android.html), but a simple cross-platform web app that can be launched in any browser is much more universally accessible! 
  
 When static video (via [Amazon S3](https://aws.amazon.com/s3/) upload) or buffered webcam frames (via [Amazon API Gateway](https://aws.amazon.com/api-gateway/) request) are uploaded by the web app, an [AWS Lambda](https://aws.amazon.com/lambda/) function, serving as a cloud proxy layer to Kinesis Video Streams, converts them to [streamable media fragments](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/how-data.html#how-data-frame). These media fragments are then put into a Kinesis Video Stream. Note that since a Kinesis Video Streams Producer SDK is currently not available for Javascript/web browser, we explored several workarounds aimed at mimicing streaming functionality in the AWS cloud layer, and ultimately opted to pursue a fully serverless (albeit, yet-to-be optimized) solution. One might also consider provisioning a custom [AMI](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) as a WebRTC server that handles stream conversion. This alternative will probably yield the best performance and lowest latency, but is not in the spirit of the serverless architecture we present here.
-
-~**@Runpeng: Please insert a sentence explaining what limitation you needed to overcome or work around. I don't remember the details. E.g. that to get the functionality we wanted, you needed to use streams and yet there were technical constraints, and this was your clever way to operate within those constraints. This will make for a good story and demonstrate the creativity of your approach. The reader will therefore see it as more valuable; it will explain itself better in the future when new ways to achieve the goals here are released; it will secure our place on the forefront where we are figuring out the very newest tools; and it will also be a reminder that other features are desired now.**~
  
 #### Uploading a pre-recorded video: 
  
@@ -69,7 +67,6 @@ Click the button to begin the stack creation process:
  
 1. Click **Next**, and specify **brain-power-fidgetology-demo** as both the **Stack name** and **Change set name**. Accept all default parameters and click **Next**. 
 
-~**@Runpeng, change the name everywhere to "brain-power-fidgetology-demo" to get more of our branding in there.**~
  
 ![Create change set -- details](attachments/screenshots/CreateChangeSetDetails.png?raw=true "Create change set -- details") 
  
@@ -237,16 +234,10 @@ The following results were obtained by streaming a pre-recorded video of one of 
 ### Real-Time Fidgetology Analysis: Child Not Using Brain Power's AR System for Autism
 ![Headset Off Results Animation](attachments/results/GlassOffAnimation_V2.gif?raw=true "Headset Off Results Animation") 
 
-~**@Runpeng, for the next draft, can you surface the face markers (eye, nose, mouth corners) for one of the GIFs? If it is distracting to the image, we can do a separate figure showing just that. It will impress viewers. Also, in the current GIFs you use circular disks. It would show off more features if they were ovals, so we could show that the system detects tilt of the head. Furthermore, it would be great if the rotation of the head would result in a horizontal squishing of the oval (as it rotates out of view), thus demonstrating that the system picks up rotation angle as well. Finally, the Rekognition Video notes mentioned it also detects eyes-open and is-smiling: we probably don't want to surface those here but I will be curious how well those work and how we might incorporate them into our future algorithms/displays.**~  
-
 ### Real-Time Fidgetology Analysis: Child Using Brain Power's AR System for Autism
 ![Headset On Results Animation](attachments/results/GlassOnAnimation_V2.gif?raw=true "Headset On Results Animation") 
 
-~**@Runpeng The animated GIFs of real-time stats seem to plot similar but not the same data as the lower single-snapshot graphs. If they were totally different, that would be fine. But since they are similar enough, I think viewers may doubt us a bit. Best if they are identical windows of the data. Would this take a long time to re-create? Is it simply a matter of letting the GIF go longer (is it the same data just not all of it) or was it a different window altogether)?**~
 
-~**@Runpeng, Please title these animations. I can help you decide title, but please take a crack at it when you can. For instance they could be titled: "Real-Time Fidgetology Analysis: // Child Not Using Brain Power's AR System for Autism" and "Real-Time Fidgetology Analysis: // Child Using Brain Power's AR System for Autism" or something like that.**~
-
-~**@Runpeng. For These plots, and for the plots below and the teaser at the top:  a.) Please make all the axis labels much bigger and easier to read, b.) either remove the 4 little icons in the upper left of the Index view, or if those are required because this is a real-time view of the actual interface you built, then brag about that! A real-time display that looks like that is very impressive. Please label it as such. c.) Please indicate that there are multiple possbile fidget indices but labeling the current one as "Fidget/Motion Index 1" or even better "Fidget/Motion Index 3" - to make it clear that there are multiple alternatives and we chose one that was best for the current video. Then a subtitle to the label (directly beneath, and in italics), such as "angular velocity" or "rotational speed" or whatever it actually was. Therefore the whole title for each would be something like "Fidget/Motion Index 3: // Rotational Speed of Face". Thanks!**~  
  
 ![Results Montage](attachments/results/Glass_ON_OFF_SideBySide_Montage_V3.png?raw=true "Results Montage") 
  
