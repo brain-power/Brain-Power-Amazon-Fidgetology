@@ -1,6 +1,6 @@
 #!/bin/bash
 
-STACK_NAME="bp-fidgetology-demo"
+STACK_NAME="brain-power-fidgetology-demo"
 
 ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
 BOOTSTRAP_BUCKET_NAME="${STACK_NAME}-bootstrap-${ACCOUNT_ID}"
