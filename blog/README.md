@@ -1,5 +1,5 @@
 
-## Automatic Analysis of Body Language to Gauge Attention and Engagement, Using Using Kinesis Video Streams and AWS Rekognition
+## Automatic Analysis of Body Language to Gauge Attention and Engagement, Using Kinesis Video Streams and AWS Rekognition
  
 Ned T. Sahin, PhD<sup>1,2</sup>, Runpeng Liu<sup>1,3</sup>, Joseph Salisbury, PhD<sup>1</sup>, Lillian Bu<sup>1,3</sup> 
 
