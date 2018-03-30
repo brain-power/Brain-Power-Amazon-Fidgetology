@@ -1,0 +1,46 @@
+<style>
+md-dialog {
+    width: 90%;
+    max-width: 768px;
+}
+
+md-dialog-content {
+    padding: 12px;
+}
+
+.error-msg {
+  color: orangered;
+  font-size: 12px;
+  margin-top: 12px;
+}
+</style>
+<md-dialog aria-label="Upload Sample Video">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h3>Upload Sample Video</h3>
+            <span flex></span>
+            <a class="md-icon-button pull-right" ng-click="closeDialog()">
+        <i class="fa fa-times" aria-label="Close"></i>
+       </a>
+        </div>
+    </md-toolbar>
+    <md-dialog-content>
+        <form name="uploadVideoForm" novalidate>
+            <md-button ng-disabled="inProgress" class="md-secondary md-raised" ngf-select ng-model="file" name="video_file" ngf-pattern="'video/*'" ngf-model-invalid="invalidVideo" ngf-accept="'video/*'" ngf-max-size="100MB">browse video <small>(Max size 100MB)</small></md-button>
+            <br/>
+            <div style="margin-left:8px;">
+                <span ng-if="uploadVideoForm.video_file.$dirty" class="error-msg">
+                  <span ng-show="!uploadVideoForm.video_file.$error.maxDuration && uploadVideoForm.video_file.$error.maxSize"><br/>File size is too large: max 100MB. Please try compressing your video.</span>
+                </span>
+                <video ng-show="uploadVideoForm.video_file.$valid" class="video-preview" ng-if="file" style="width:525px;height:360px;border:2px;" controls ngf-src="file"></video>
+                <br/>
+                <span style="font-family:monospace" ng-bind="file.name"></span>
+                <br/>
+                <p ng-bind="uploadStatus"></p>
+                <md-progress-linear md-mode="indeterminate" ng-show="inProgress"></md-progress-linear>
+                <br/>
+            </div>
+            <md-button class="md-primary md-raised" ng-disabled="!file || inProgress" aria-label="Upload video" ng-click="saveVideo(file)"><i class="fa fa-video"></i> Upload and Stream</md-button>
+        </form>
+    </md-dialog-content>
+</md-dialog>

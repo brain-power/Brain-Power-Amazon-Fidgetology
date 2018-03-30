@@ -1,0 +1,10 @@
+node_modules/
+dashboard/js/app/config.js
+deploy.sh
+master-template.yaml
+packaged-template_lite.yaml
+*.log
+tmp/
+.idea/
+blog/attachments/ignore
+blog/scratch

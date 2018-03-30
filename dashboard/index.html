@@ -1,0 +1,162 @@
+<html>
+
+<head>
+    <title>KVS-Rekognition Fidgetology Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="css/main.css" media="screen">
+    <!-- Angular Material Design CSS -->
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.css">
+    <script defer src="js/lib/font-awesome/fontawesome-all.min.js"></script>
+    <!-- Jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <!-- AWS SDK for browser -->
+    <script src="js/lib/aws-sdk/aws-sdk.min.js"></script>
+    <!-- Echarts charting library -->
+    <script src="js/lib/echarts/echarts.min.js"></script>
+    <!-- AngularJS and dependencies -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.6/angular-material.min.js"></script>
+    <script src="js/lib/ng-file-upload/ng-file-upload.min.js"></script>
+    <script src="js/lib/ng-file-upload/ng-file-upload-shim.min.js"></script>
+    <!-- Use WebcamJS to capture video frames -->
+    <script src="js/lib/webcamjs/webcam.js"></script>
+    <script src="js/custom/frame-buffer.js"></script>
+    <script src="js/app/config.js"></script>
+    <script src="js/app/ng-config.js"></script>
+    <!-- Angular app controllers -->
+    <script src="js/app/root-controller.js"></script>
+    <script src="js/app/webcam-stream-controller.js"></script>
+    <script src="js/app/chart-controllers/metrics-chart-controller.js"></script>
+    <script src="js/app/chart-controllers/fidgetometer-controller.js"></script>
+</head>
+
+<body ng-app="dashboardApp" ng-controller="RootController as ctrl" ng-init="init()" ng-cloak>
+    <md-content>
+        <div layout="row">
+            <div flex>
+                <md-toolbar class="md-hue-1">
+                    <div class="md-toolbar-tools">
+                        <h3 md-truncate hide show-gt-md>Video Source for KVS:&nbsp;</h3>
+                        <md-button ng-click="openUploadDialog($event)" ng-show="Config.IdentityPoolId && !isStreaming" ng-disabled="inProgress" class="md-secondary md-raised">
+                            <i class="fa fa-upload"></i>&nbsp;Upload Video
+                        </md-button>
+                        <md-button ng-click="toggleWebcamStream($event)" ng-disabled="inProgress" class="md-primary md-raised" aria-label="Toggle webcam">
+                            <label ng-if="!isStreaming">
+                                <i class="fa fa-video"></i> Stream Webcam
+                            </label>
+                            <label ng-if="isStreaming">
+                                <i class="fa fa-stop"></i> Stop Webcam
+                            </label>
+                        </md-button>
+                        <md-button hide show-gt-md ng-show="isStreaming" href="https://console.aws.amazon.com/kinesisvideo/streams/streamName/{{Config.KVS_STREAM_NAME}}?region={{Config.AWS_REGION}}" target="_blank" class="md-raised">
+                            KVS Console&nbsp;<i class="fa fa-external-link-alt"></i>
+                        </md-button>
+                        <h1 flex></h1>
+                        <div md-truncate hide show-gt-md ng-show="currentTime">
+                            <small>Producer Time</small>
+                            <br/><b>{{currentTime | date : 'h:mm:ss a'}}</b>
+                        </div>
+                    </div>
+                </md-toolbar>
+                <section ng-controller="WebcamStreamController" ng-hide="staticVideo[0] && !isStreaming">
+                    <div class="md-padding" style="font-size:1.25em; background-color:#eee">
+                        &nbsp; <span ng-show="streamMetadata.startTimestamp && currentTime > streamMetadata.startTimestamp">
+                            <i class="fa fa-clock"></i> {{currentTime - streamMetadata.startTimestamp | date : 'm:ss' }}
+                        </span>
+                    </div>
+                    <md-progress-linear md-mode="indeterminate" ng-show="streamMetadata.inProgress" style="width:100%;max-width:640px;"></md-progress-linear>
+                    <div id="webcam-canvas"></div>
+                    <br>
+                    <md-checkbox ng-show="isStreaming" ng-model="shouldUploadFrames" ng-true-value="1" ng-false-value="0" aria-label="Upload frames?" class="md-primary" style="margin-left:12px;">Upload frames?</md-checkbox>
+                    <div class="stream-metrics md-padding" ng-if="streamMetadata && isStreaming" style="padding-bottom:0">
+                        <md-input-container>
+                            <label>Webcam FPS</label>
+                            <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.framerate"></input>
+                        </md-input-container>
+                        <md-input-container>
+                            <label>No. Frames to Buffer</label>
+                            <input class="md-primary" min="20" max="80" type="number" ng-model="streamMetadata.bufferSize"></input>
+                        </md-input-container>
+                        <md-input-container>
+                            <label>Time b/w Requests (ms)</label>
+                            <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.postInterval"></input>
+                        </md-input-container>
+                        <!--<md-input-container>
+                            <label>Webcam-KVS Latency (ms)</label>
+                            <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.KVSLatency"></input>
+                        </md-input-container>-->
+                        <!--<md-input-container>
+                    <label>Last request size
+                        <br>(Lambda max: 6 MB)</label>
+                    <input class="md-primary" ng-readonly="true" ng-model="streamMetadata.payloadSize"></input>
+                </md-input-container>-->
+                    </div>
+                </section>
+                <div ng-hide="isStreaming || !staticVideo[0]">
+                    <video class="video-preview" style="width:100%" autoplay controls ngf-src="staticVideo[0]"></video>
+                </div>
+            </div>
+            <div flex hide show-gt-sm ng-controller="MetricsChartController" ng-init="init()" ng-if="Config.KDS_RAW_STREAM_NAME">
+                <md-toolbar class="md-hue-2">
+                    <div class="md-toolbar-tools">
+                        <h1 flex md-truncate hide show-gt-md>Face Motion Metrics (from Rekognition Video)</h1>
+                        <md-button hide show-gt-md ng-show="isStreaming" href="https://console.aws.amazon.com/kinesis/home?region={{Config.AWS_REGION}}#streams/details?streamName={{Config.KDS_RAW_STREAM_NAME}}" target="_blank" class="md-raised">
+                            KDS Console&nbsp;<i class="fa fa-external-link-alt"></i>
+                        </md-button>&nbsp;
+                        <div hide show-gt-sm ng-if="latestMetricTimestamp">
+                            <small>Lastest Data</small>
+                            <br><b>{{latestMetricTimestamp | date : 'h:mm:ss a'}}</b>
+                        </div>
+                    </div>
+                </md-toolbar>
+                <div style="font-size:1.25em; background-color:#eee;" class="md-padding">
+                    &nbsp; <span ng-show="streamMetadata.startTimestamp && latestMetricTimestamp > streamMetadata.startTimestamp">
+                        <i class="fa fa-clock"></i> {{latestMetricTimestamp - streamMetadata.startTimestamp | date : 'm:ss'}}
+                    </span>
+                </div>
+                <section ng-show="latestMetricTimestamp">
+                    <br/>
+                    <md-input-container flex>
+                        <label>Choose data to plot</label>
+                        <md-select ng-model="selectedMetric" ng-change="metricChanged()">
+                            <md-option ng-repeat="config in metricsConfigs" ng-value="config">
+                                {{config.displayName}}
+                            </md-option>
+                        </md-select>
+                    </md-input-container> &nbsp;
+                    <md-input-container flex>
+                        <label>Plotting history</label>
+                        <md-select ng-model="selectedPlotHistory" ng-change="metricChanged()">
+                            <md-option ng-repeat="interval in plottingHistorySettings" ng-value="interval">
+                                {{interval.displayName}}
+                            </md-option>
+                        </md-select>
+                    </md-input-container>
+                </section>
+                <br>
+                <h2 ng-if="isStreaming && !latestMetricTimestamp" align="center"> ... Waiting for data ... </h2>
+                <div id="chart-metrics-raw" class="chart-container" style="width:100%; height: 500px"></div>
+            </div>
+        </div>
+        <div layout="row" ng-if="Config.KDS_RAW_STREAM_NAME">
+            <div flex>
+                <md-toolbar class="md-hue-3">
+                    <div class="md-toolbar-tools">
+                        <h1 flex md-truncate>Analytics</h1>
+                    </div>
+                </md-toolbar>
+                <div flex ng-controller="FidgetometerController" ng-init="init()">
+                    <br>
+                    <div id="fidgetometer" class="chart-container" style="width:100%; height: 500px"></div>
+                </div>
+            </div>
+        </div>
+        <br>
+    </md-content>
+</body>
+
+</html>
