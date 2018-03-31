@@ -75,7 +75,7 @@ Below is a side-by-side illustration of webcam streaming to the Kinesis Video St
 
 <kbd>
  <img src="attachments/screenshots/Brain_Power_fidgetology_04__KVSConsoleDemoCrop.gif?raw=true">
-</kbd><br/>
+</kbd></br></br>
 
 To decrease the lag, you can experiment with adjusting the **No. Frames to Buffer** parameter using the form input below the live webcam feed. Beware that specifying too low of a buffer size may cause KVS to receive frames out-of-order.
 
@@ -121,13 +121,13 @@ Click the button to begin the stack creation process:
 
 <kbd>
  <img src="attachments/screenshots/Brain_Power_fidgetology_05__CreateChangeSetDetails.png?raw=true">
-</kbd><br/>
+</kbd></br></br>
 
 **Step 2.** Click **Next** again to get to the final Review page. Under *Capabilities*, confirm acknowledgement that new IAM resources will be created. Then click **Create change set**.
 
 <kbd>
  <img src="attachments/screenshots/Brain_Power_fidgetology_06__CreateChangeSetIAM.png?raw=true">
-</kbd><br/>
+</kbd><br/><br/>
 
 **Step 3.** On the next page, wait for the stack to finish 'Computing changes'. Then click **Execute** (top-right corner of page) to start the stack deployment. Confirm, and refresh the CloudFormation page to find your newly created stack. Click on it to monitor the deployment process, which should take no more than 3 minutes.
 
@@ -137,13 +137,13 @@ Click the button to begin the stack creation process:
 
 <kbd>
  <img src="attachments/screenshots/Brain_Power_fidgetology_08__CreateStackInProgress.png?raw=true">
-</kbd><br/>
+</kbd><br/><br/>
 
 **Step 4.** After deployment is complete, launch the demo web app by visiting the **WebAppSecureURL** link listed under *Outputs*.
 
 <kbd>
  <img src="attachments/screenshots/Brain_Power_fidgetology_09__WebAppURLOutput.png?raw=true">
-</kbd><br/>
+</kbd><br/><br/>
 
 By default, the CloudFormation template
 creates all necessary AWS resources for this project (Kinesis Video Stream, Rekognition Stream Processor, Kinesis Data Streams, serverless Lambda functions, and an API Gateway endpoint). It copies the dashboard web application to an
@@ -197,7 +197,7 @@ If you launched the stack from the CloudFormation online console, simply delete 
 
 <kbd>
  <img src="attachments/screenshots/DeleteStack.png?raw=true">
-</kbd><br/>
+</kbd><br/><br/>
 
 If you deployed from the command line, run the master tear down command:
 
