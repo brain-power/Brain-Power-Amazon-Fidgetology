@@ -17,7 +17,9 @@ AWS Technologies used:
 
 ## Components
 
-![System Architecture Diagram](attachments/Brain_Power_fidgetology_02__SystemArchitectureDiagram_trans.png?raw=true "System Architecture Diagram")
+<kbd>
+ <img src="attachments/Brain_Power_fidgetology_02__SystemArchitectureDiagram_trans.png?raw=true">
+</kbd>
 
 ### Web Dashboard App
 
@@ -25,11 +27,15 @@ The client dashboard app allows users to 1) upload pre-recorded video and 2) str
 
 #### Uploading a Video
 
-![Upload a Video](attachments/screenshots/Brain_Power_fidgetology_03__UploadVideoExampleBlur.jpg?raw=true "Upload a Video")
+<kbd>
+ <img src="attachments/screenshots/Brain_Power_fidgetology_03__UploadVideoExampleBlur.jpg?raw=true">
+</kbd>
 
 #### Streaming Video from a Webcam
 
-![Stream your Webcam](attachments/screenshots/WebcamStreamExampleCensored.jpg?raw=true "Stream Webcam")
+<kbd>
+ <img src="attachments/screenshots/WebcamStreamExampleCensored.jpg?raw=true">
+</kbd>
 
 (*Faces censored)
 
@@ -67,7 +73,9 @@ An MKV file upload event triggers the [`lambda/S3ToKVS`](lambda/S3ToKVS/LambdaFu
 
 Below is a side-by-side illustration of webcam streaming to the Kinesis Video Streams online console. The lag between the live webcam app feed (left) and the time these frames are played back on the KVS console (right) is about 5 seconds (though this may vary depending on browser/platform/specs of your machine).
 
-![Streaming Latency Demo](attachments/screenshots/Brain_Power_fidgetology_04__KVSConsoleDemoCrop.gif?raw=true "Streaming Latency Demo")
+<kbd>
+ <img src="attachments/screenshots/Brain_Power_fidgetology_04__KVSConsoleDemoCrop.gif?raw=true">
+</kbd><br/>
 
 To decrease the lag, you can experiment with adjusting the **No. Frames to Buffer** parameter using the form input below the live webcam feed. Beware that specifying too low of a buffer size may cause KVS to receive frames out-of-order.
 
@@ -111,21 +119,31 @@ Click the button to begin the stack creation process:
 
 **Step 1.** Click **Next**, and specify **brain-power-fidgetology-demo** as both the **Stack name** and **Change set name**. Accept all default parameters and click **Next**.
 
-![Create change set -- details](attachments/screenshots/Brain_Power_fidgetology_05__CreateChangeSetDetails.png?raw=true "Create change set -- details")
+<kbd>
+ <img src="attachments/screenshots/Brain_Power_fidgetology_05__CreateChangeSetDetails.png?raw=true">
+</kbd><br/>
 
 **Step 2.** Click **Next** again to get to the final Review page. Under *Capabilities*, confirm acknowledgement that new IAM resources will be created. Then click **Create change set**.
 
-![Create change set -- IAM](attachments/screenshots/Brain_Power_fidgetology_06__CreateChangeSetIAM.png?raw=true "Create change set -- IAM")
+<kbd>
+ <img src="attachments/screenshots/Brain_Power_fidgetology_06__CreateChangeSetIAM.png?raw=true">
+</kbd><br/>
 
 **Step 3.** On the next page, wait for the stack to finish 'Computing changes'. Then click **Execute** (top-right corner of page) to start the stack deployment. Confirm, and refresh the CloudFormation page to find your newly created stack. Click on it to monitor the deployment process, which should take no more than 3 minutes.
 
-![Create change set -- Execute](attachments/screenshots/Brain_Power_fidgetology_07__CreateChangeSetExecute.png?raw=true "Create change set -- Execute")
+<kbd>
+ <img src="attachments/screenshots/Brain_Power_fidgetology_07__CreateChangeSetExecute.png?raw=true">
+</kbd><br/>
 
-![Create Stack -- In Progress](attachments/screenshots/Brain_Power_fidgetology_08__CreateStackInProgress.png?raw=true "Create Stack -- In Progress")
+<kbd>
+ <img src="attachments/screenshots/Brain_Power_fidgetology_08__CreateStackInProgress.png?raw=true">
+</kbd><br/>
 
 **Step 4.** After deployment is complete, launch the demo web app by visiting the **WebAppSecureURL** link listed under *Outputs*.
 
-![Stack Completed Output](attachments/screenshots/Brain_Power_fidgetology_09__WebAppURLOutput.png?raw=true "Stack Completed Output")
+<kbd>
+ <img src="attachments/screenshots/Brain_Power_fidgetology_09__WebAppURLOutput.png?raw=true">
+</kbd><br/>
 
 By default, the CloudFormation template
 creates all necessary AWS resources for this project (Kinesis Video Stream, Rekognition Stream Processor, Kinesis Data Streams, serverless Lambda functions, and an API Gateway endpoint). It copies the dashboard web application to an
@@ -177,7 +195,9 @@ Then navigate to http://localhost:3000 in your browser.
 
 If you launched the stack from the CloudFormation online console, simply delete the stack online.
 
-![Delete Stack](attachments/screenshots/DeleteStack.png?raw=true "Delete Stack")
+<kbd>
+ <img src="attachments/screenshots/DeleteStack.png?raw=true">
+</kbd><br/>
 
 If you deployed from the command line, run the master tear down command:
 
