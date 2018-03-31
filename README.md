@@ -1,10 +1,10 @@
 # Brain-Power-Amazon-Fidgetology
 
-Repository for demo app + code artifacts associated with [Brain Power fidgetology post](https://aws.amazon.com/blogs/machine-learning/building-automatic-analysis-of-body-language-to-gauge-attention-and-engagement-using-amazon-kinesis-video-streams-and-amazon-ai-services/) in AWS Machine Learning blog.
+Repository for demo app + code artifacts associated with [Brain Power fidgetology post](https://aws.amazon.com/blogs/machine-learning/building-automatic-analysis-of-body-language-to-gauge-attention-and-engagement-using-amazon-kinesis-video-streams-and-amazon-ai-services/) on AWS Machine Learning Blog.
 
 ## Overview
 
-This is a serverless web application for streaming webcam feed from a browser to Amazon Kinesis Video Streams and Amazon Rekognition Video. Body motion metrics can be then be visualized in web app with minimal delay.
+This is a serverless web application for streaming webcam feed from a browser to [Amazon Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo) and [Amazon Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html). Body motion metrics can be then be visualized in web app with minimal delay.
 
 AWS Technologies used:
 * Kinesis Video Streams
@@ -21,13 +21,13 @@ AWS Technologies used:
 
 ### Web Dashboard App
 
-The client dashboard app allows users to 1) upload pre-recorded video and 2) stream webcam feed to [Amazon Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo), and visualize the resulting face motion metrics computed by [Amazon Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html) in near real-time. For details on how client-side streaming works and tools used to build the web app, see the [dashboard app-specific documentation](dashboard).
+The client dashboard app allows users to 1) upload pre-recorded video and 2) stream a webcam feed to [Amazon Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo), and visualize the resulting face motion metrics computed by [Amazon Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html) in near real-time. For details on how client-side streaming works and tools used to build the web app, see the [dashboard app-specific documentation](dashboard).
 
-#### Uploading Videos
+#### Uploading a Video
 
 ![Upload a Video](attachments/screenshots/Brain_Power_fidgetology_03__UploadVideoExampleBlur.jpg?raw=true "Upload a Video")
 
-#### Streaming Video from Webcam
+#### Streaming Video from a Webcam
 
 ![Stream your Webcam](attachments/screenshots/WebcamStreamExampleCensored.jpg?raw=true "Stream Webcam")
 
@@ -87,7 +87,7 @@ The Kinesis Video Stream is used as input to a [Rekognition Stream Processor](ht
 
 The [raw output](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video-kinesis-output-reference.html) of Rekognition Stream Processor is published to a Kinesis Data Stream. When new records appear in this raw stream, a Lambda function is triggered that computes interesting derived metrics on faces in successive video frames, such as the rotational/translational motion velocities. These processed metrics are then published to another Kinesis Data Stream, for consumption by downstream applications and web dashboards. See [`lambda/StreamAnalyzer`](lambda/StreamAnalyzer/index.js) for an example of how one might analyze the raw output of Rekognition Video.
 
-### Visualizing Metrics
+### Visualizing the Metrics
 
 For this demo, the web app consumes body motion metrics directly from the processed Kinesis Data Stream and renders them as real-time updating chart visualizations. 
 
@@ -98,10 +98,10 @@ For this demo, the web app consumes body motion metrics directly from the proces
 There are two flavors of this project that can be deployed:
 
 * **'Full'** version - expressed in [`template.yaml`](template.yaml). Includes all components described in previous section.
-* **'Lite'** version - expressed in [`template_lite.yaml`](template_lite.yaml). Only includes browser Webcam to Kinesis Video Stream component. Rekognition Video, Kinesis Data Streams, and demo analytics + visualizations are excluded for simplicity.
+* **'Lite'** version - expressed in [`template_lite.yaml`](template_lite.yaml). Only includes browser Webcam to Kinesis Video Streams component. Rekognition Video, Kinesis Data Streams, and demo analytics + visualizations are excluded for simplicity.
 
 This project can be deployed using [AWS
-CloudFormation](https://aws.amazon.com/cloudformation/) as a *Change Set for a New Stack* (a Serverless Application transform must first be applied to the `template.yaml` definition).
+CloudFormation](https://aws.amazon.com/cloudformation/) as a *Change Set for a New Stack* (a serverless application transform must first be applied to the `template.yaml` definition).
 
 Click the button to begin the stack creation process:
 
@@ -109,26 +109,26 @@ Click the button to begin the stack creation process:
 
 **Lite** Version:  <a target="_blank" href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stack/changeset/new?templateURL=https:%2F%2Fs3.amazonaws.com%2Fbrainpower-aws-blogs%2Fartifacts%2Ffidgetology-demo-app%2Fpackaged-template_lite.yaml"><span><img height="24px" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png"/></span></a>
 
-1. Click **Next**, and specify **brain-power-fidgetology-demo** as both the **Stack name** and **Change set name**. Accept all default parameters and click **Next**.
+**Step 1.** Click **Next**, and specify **brain-power-fidgetology-demo** as both the **Stack name** and **Change set name**. Accept all default parameters and click **Next**.
 
 ![Create change set -- details](attachments/screenshots/Brain_Power_fidgetology_05__CreateChangeSetDetails.png?raw=true "Create change set -- details")
 
-2. Click **Next** again to get to the final Review page. Under *Capabilities*, confirm acknowledgement that new IAM resources will be created. Then click **Create change set**.
+**Step 2.** Click **Next** again to get to the final Review page. Under *Capabilities*, confirm acknowledgement that new IAM resources will be created. Then click **Create change set**.
 
 ![Create change set -- IAM](attachments/screenshots/Brain_Power_fidgetology_06__CreateChangeSetIAM.png?raw=true "Create change set -- IAM")
 
-3. On the next page, wait for the stack to finish 'Computing changes'. Then click **Execute** (top-right corner of page) to start the stack deployment. Confirm, and refresh the CloudFormation page to find your newly created stack. Click on it to monitor the deployment process, which should take no more than 3 minutes.
+**Step 3.** On the next page, wait for the stack to finish 'Computing changes'. Then click **Execute** (top-right corner of page) to start the stack deployment. Confirm, and refresh the CloudFormation page to find your newly created stack. Click on it to monitor the deployment process, which should take no more than 3 minutes.
 
 ![Create change set -- Execute](attachments/screenshots/Brain_Power_fidgetology_07__CreateChangeSetExecute.png?raw=true "Create change set -- Execute")
 
 ![Create Stack -- In Progress](attachments/screenshots/Brain_Power_fidgetology_08__CreateStackInProgress.png?raw=true "Create Stack -- In Progress")
 
-4. After deployment is complete, launch the demo web app by visiting the **WebAppSecureURL** link listed under *Outputs*.
+**Step 4.** After deployment is complete, launch the demo web app by visiting the **WebAppSecureURL** link listed under *Outputs*.
 
 ![Stack Completed Output](attachments/screenshots/Brain_Power_fidgetology_09__WebAppURLOutput.png?raw=true "Stack Completed Output")
 
 By default, the CloudFormation template
-creates all necessary AWS resources for this project (Kinesis Video Stream, Rekognition Stream Processor, Kinesis Data Streams, Serverless Lambda functions, and API Gateway). It copies the dashboard web application to an
+creates all necessary AWS resources for this project (Kinesis Video Stream, Rekognition Stream Processor, Kinesis Data Streams, serverless Lambda functions, and an API Gateway endpoint). It copies the dashboard web application to an
 [Amazon S3](https://aws.amazon.com/s3/) bucket and outputs a secure URL (fronted by API Gateway) for accessing the web app.
 
 ### Command Line Deployment
