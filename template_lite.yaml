@@ -104,9 +104,11 @@ Parameters:
   ApplicationName:
     Type: String
     Default: brain-power-fidgetology-demo
-    AllowedPattern: "^[a-z0-9\\-]{4,48}$"
+    AllowedPattern: "^(?![0-9]+$)(?!.*-$)(?!-)[a-z0-9-]{4,48}$"
     Description: >
-            Allowed characters: lowercase letters [a-z], numbers [0-9], and hyphens [-].
+            Enter a DNS compatible label.
+            Allowed characters: lowercase letters [a-z], numbers [0-9], and hyphens [-] only.
+            Must begin and end with alphanumeric character.
   TargetFrameRate:
     Type: Number
     Default: 10
