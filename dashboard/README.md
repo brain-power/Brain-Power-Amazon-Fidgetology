@@ -1,5 +1,5 @@
-This directory contains static files for the client dashboard app that allows user to stream webcam feed and upload videos for ingestion by KVS and Rekognition Video.
-Raw and analyzed face motion metrics from Rekognition are then rendered back to the dashboard in near real-time.
+This directory contains static files for the client dashboard app that allows user to stream webcam feed and upload videos for ingestion by Amazon Kinesis Video Streams and Rekognition Video.
+Raw and analyzed face motion metrics from Rekognition Video are then rendered back to the dashboard in near real-time.
 
 ## Tools used
 
@@ -25,16 +25,16 @@ Single-page, responsive app -- `index.html` is the root view.
 
 ### Bootstrapper
 
-`bootstrapper.js` is a Lambda function provisioned by a [CloudFormation Custom Resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-custom-resources.html).
+[`bootstrapper.js`](bootstrapper.js) is an AWS Lambda function provisioned by a [CloudFormation Custom Resource](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-custom-resources.html).
 It is responsible for syncing files in this directory with the S3 bucket hosting the web app when stack is deployed. 
 When the stack is destroyed, the script is responsible for deleting the web app bucket and deleting all video uploads/fragments that were streamed using the web app.
 
 ### Using WebcamJS to Stream Video
 
 [WebcamJS](https://github.com/jhuckaby/webcamjs/blob/master/DOCS.md) library is used to provide cross-browser, cross-platform support for accessing user's webcam via [WebRTC](https://webrtc.github.io/samples/) `getUserMedia` API.
-For this project, we include a demo `FrameBuffer` class (`js/custom/frame-buffer.js`) that handles buffering image frames acquired from webcam.
+For this project, we include a demo `FrameBuffer` class ([`js/custom/frame-buffer.js`](js/custom/frame-buffer.js)) that handles buffering image frames acquired from webcam.
 Here is basic sample code for acquiring webcam feed, buffering frames at regular interval, and posting to data endpoint. 
-For a full example that is used in the demo app see `js/app/webcam-stream-controller.js`
+For a full example that is used in the demo app, see [`js/app/webcam-stream-controller.js`](js/app/webcam-stream-controller.js).
 
 #### Client sample code
 
@@ -114,4 +114,4 @@ function stopStreaming() {
 
 #### Server-side integration
 
-For details on how image data sent by client should be processed on server-side see documentation in [lambda/WebApi](../lambda/WebApi/README.md#post-framedata)
+For details on how frame sequence data sent by client should be processed on server-side, refer to documentation in [lambda/WebApi](../lambda/WebApi/README.md#post-framedata)
