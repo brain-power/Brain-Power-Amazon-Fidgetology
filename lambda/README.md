@@ -41,9 +41,9 @@ VideoConvertedEvent:
        S3Key:
           Rules:
             - Name: suffix
-            Value: .mkv
+              Value: .mkv
             - Name: prefix
-            Value: mkv_uploads/
+              Value: mkv_uploads/
 ```
 
 **Notes:** We do not include the entire Java project associated with this `S3ToKVS` function. 
