@@ -23,7 +23,7 @@ AWS Technologies used:
 
 ### Web Dashboard App
 
-The client dashboard app allows users to 1) upload pre-recorded video and 2) stream a webcam feed to [Amazon Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo), and visualize the resulting face motion metrics computed by [Amazon Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html) in near real-time. For details on how client-side streaming works and tools used to build the web app, see the [dashboard app-specific documentation](dashboard).
+The client dashboard app allows users to 1) upload pre-recorded video and 2) stream a webcam feed to [Amazon Kinesis Video Streams](https://console.aws.amazon.com/kinesisvideo), and visualize the resulting face motion metrics computed by [Amazon Rekognition Video](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html) in near real-time. For details on how client-side streaming works and tools used to build the web app, see the [dashboard app-specific documentation](dashboard#readme).
 
 #### Uploading a Video
 
@@ -89,7 +89,7 @@ To decrease the lag, you can experiment with adjusting the **No. Frames to Buffe
 
 ### Rekognition Stream Processor
 
-The Kinesis Video Stream is used as input to a [Rekognition Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html), that detects and recognizes faces in the video stream, and publishes raw records to a [Kinesis Data Stream](). See [`lambda/StreamResourceProvisioner`](lambda/StreamResourceProvisioner) for how these resources are provisioned.
+The Kinesis Video Stream is used as input to a [Rekognition Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html), that detects and recognizes faces in the video stream, and publishes raw records to a [Kinesis Data Stream](). See [`lambda/StreamResourceProvisioner`](lambda/StreamResourceProvisioner/index.js) for how these resources are provisioned.
 
 ### Body Motion Analytics
 
