@@ -89,7 +89,7 @@ To decrease the lag, you can experiment with adjusting the **No. Frames to Buffe
 
 ### Rekognition Stream Processor
 
-The Kinesis Video Stream is used as input to a [Rekognition Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html), that detects and recognizes faces in the video stream, and publishes raw records to a [Kinesis Data Stream](). See [`lambda/StreamResourceProvisioner`](lambda/StreamResourceProvisioner/index.js) for how these resources are provisioned.
+The Kinesis Video Stream is used as input to a [Rekognition Stream Processor](https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video.html), that detects and recognizes faces in the video stream, and publishes raw records to a [Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/). See [`lambda/StreamResourceProvisioner`](lambda/StreamResourceProvisioner/index.js) for how these resources are provisioned.
 
 ### Body Motion Analytics
 
