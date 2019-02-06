@@ -67,7 +67,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 # Using Serverless Application Model (SAM) CF template definition
 # See specification: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md
-Transform: 'AWS::Serverless-2016-10-31' 
+Transform: 'AWS::Serverless-2016-10-31'
 Globals:
   Function:
     Timeout: 300 # seconds
@@ -88,7 +88,7 @@ Globals:
         IdentityPoolId: !Ref IdPool
 
 Parameters:
-  ShouldBootstrapWebApp: 
+  ShouldBootstrapWebApp:
     Type: String
     Default: true
     AllowedValues: [true, false]
@@ -114,13 +114,13 @@ Parameters:
     Type: String
     Default: brain-power-fidgetology-demo-kvs
     Description: >
-            Name of Kinesis Video Stream that will be created with this stack. 
+            Name of Kinesis Video Stream that will be created with this stack.
             Change to the name of an existing Kinesis Video Stream if you do not want this stack to create a new one.
   RekognitionFaceCollection:
     Type: String
     Default: brain-power-fidgetology-demo-face-collection
     Description: >
-            Name of empty Rekognition Face Collection that will be created with this stack. 
+            Name of empty Rekognition Face Collection that will be created with this stack.
             Change to the name of an existing Face Collection if you do not want this stack to create a new one.
   TargetFrameRate:
     Type: Number
@@ -147,8 +147,8 @@ Resources:
   UploadsBucket:
     Type: AWS::S3::Bucket
     Description: Bucket that stores static videos and stream fragments uploaded using web app
-    DeletionPolicy: Retain
-    Properties: 
+    DeletionPolicy: Delete
+    Properties:
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ['*']
@@ -159,7 +159,7 @@ Resources:
   WebAppBucket:
     Type: AWS::S3::Bucket
     Description: Bucket that hosts static content of web app
-    DeletionPolicy: Retain
+    DeletionPolicy: Delete
     Properties:
       AccessControl: PublicRead
       WebsiteConfiguration:
@@ -196,7 +196,7 @@ Resources:
         Variables:
           ShouldDeleteVideoFragments: !Ref ShouldDeleteVideoFragments
       Timeout: 20
-      Policies: 
+      Policies:
         - AWSLambdaExecute
         - Version: '2012-10-17'
           Statement:
@@ -209,7 +209,7 @@ Resources:
               Action:
                 - s3:ListBucket
                 - s3:DeleteBucket
-              Resource: 
+              Resource:
                 - !Sub "arn:aws:s3:::${ApplicationName}-webapp-${AWS::AccountId}"
                 - !Sub "arn:aws:s3:::${ApplicationName}-uploads-${AWS::AccountId}"
             - Effect: Allow
@@ -218,7 +218,7 @@ Resources:
                 - s3:PutObject
                 - s3:ListObjects
                 - s3:DeleteObject
-              Resource: 
+              Resource:
                 - !Sub "arn:aws:s3:::${ApplicationName}-webapp-${AWS::AccountId}/*"
                 - !Sub "arn:aws:s3:::${ApplicationName}-uploads-${AWS::AccountId}/*"
 
@@ -228,7 +228,7 @@ Resources:
             A custom resource that uploads dashboard static files to web app bucket upon stack creation.
     Properties:
       ServiceToken: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ApplicationName}-WebAppBootstrapper"
-    DependsOn: 
+    DependsOn:
       - WebAppBucket
       - UploadsBucket
       - WebAppBootstrapperLambda
@@ -280,18 +280,18 @@ Resources:
     Type: AWS::IAM::Role
     Description: Allows Rekognition to call services on the account's behalf
     Properties:
-      AssumeRolePolicyDocument: 
+      AssumeRolePolicyDocument:
         Version: "2012-10-17"
-        Statement: 
+        Statement:
             Effect: Allow
-            Principal: 
+            Principal:
               Service: rekognition.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonRekognitionServiceRole
 
   ####### Stream Resources #######
-  
+
   RawDataStream:
     Type: AWS::Kinesis::Stream
     Description: Kinesis Data Stream for ingesting raw output of Rekognition stream processor
@@ -299,7 +299,7 @@ Resources:
       Name: !Sub "AmazonRekognition-${ApplicationName}-kds"
       RetentionPeriodHours: 24
       ShardCount: 1
-      StreamEncryption: 
+      StreamEncryption:
         EncryptionType: KMS
         KeyId: alias/aws/kinesis
 
@@ -318,15 +318,15 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Description: >
-            Provisions a Kinesis Video Stream and Rekognition Stream Processor when stack is created. 
-            Deletes these stream resources when stack is deleted. 
-            Bootstraps dashboard static files to web app bucket. 
+            Provisions a Kinesis Video Stream and Rekognition Stream Processor when stack is created.
+            Deletes these stream resources when stack is deleted.
+            Bootstraps dashboard static files to web app bucket.
       Handler: index.handler
       Runtime: nodejs6.10
       CodeUri: ./lambda/StreamResourceProvisioner
       FunctionName: !Sub "${ApplicationName}-StreamResourceProvisioner"
       Timeout: 5
-      Policies: 
+      Policies:
         - AWSLambdaExecute
         - AmazonKinesisVideoStreamsFullAccess
         - AmazonRekognitionFullAccess
@@ -342,19 +342,19 @@ Resources:
   StreamResourceProvisioner:
     Type: Custom::StreamResourceProvisioner # Custom resource definition
     Description: >
-            A custom resource that executes the StreamResourceProvisioner Lambda Function upon stack creation. 
-            This is a temporary workaround until Kinesis Video Stream and Rekognition Stream Processor resource definitions 
+            A custom resource that executes the StreamResourceProvisioner Lambda Function upon stack creation.
+            This is a temporary workaround until Kinesis Video Stream and Rekognition Stream Processor resource definitions
             are available through CloudFormation.
     Properties:
       ServiceToken: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ApplicationName}-StreamResourceProvisioner"
-    DependsOn: 
+    DependsOn:
       - RawDataStream
       - StreamResourceProvisionerLambda
       - RekognitionServiceRole
 
   # TODO: add KinesisVideoStream definition, once it is available through Cloudformation
   # TODO: add Rekognition Stream Processor definition, once it is available through Cloudformation
-  
+
   ####### Serverless Lambda Functions #######
 
   MKVConverterLambda:
@@ -368,7 +368,7 @@ Resources:
       Environment:
         Variables:
           FFMPEG_CMD: '-i %i -vcodec copy -an %o'
-      Policies: 
+      Policies:
         - AWSLambdaExecute
         - Version: '2012-10-17'
           Statement:
@@ -397,7 +397,7 @@ Resources:
       Runtime: java8
       CodeUri: ./lambda/S3ToKVS/S3ToKVS.jar
       MemorySize: 3000
-      Policies: 
+      Policies:
         - AWSLambdaExecute
         - AmazonKinesisVideoStreamsFullAccess
         - Version: '2012-10-17'
