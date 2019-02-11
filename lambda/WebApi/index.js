@@ -1,6 +1,6 @@
-/* 
+/*
  * Authored by Runpeng Liu,
- * Brain Power (2018) 
+ * Brain Power (2018)
  */
 
 const aws = require('aws-sdk');
@@ -83,9 +83,9 @@ const renderStatic = (event, context, callback) => {
 // @param event.body
 // {
 //   "frames": [ frameData_1, frameData_2, ..., frameData_N ], // where frameData_i is base64-encoded string of the ith frame of image sequence.
-//      e.g. "data:image(jpeg|png);base64,----"; a web browser client can generate this frame data by calling 
+//      e.g. "data:image(jpeg|png);base64,----"; a web browser client can generate this frame data by calling
 //     `canvas.toDataURL('image/jpeg')` on a canvas element that a webcam video feed (or any video source) is being streamed to.
-//   
+//
 //   "framerate": Integer, // estimated framerate of image sequence computed by client.
 //
 //   "timestamps": [ timestamp_1, timestamp_2, ..., timestamp_N ], // producer timestamps that image frames were generated at in UTC milliseconds,
@@ -106,7 +106,7 @@ const processFrameData = (event, context, callback) => {
     console.log(`Received ${payload.frames.length} frames at ${payload.framerate} FPS`);
 
     // (infer timestamps from framerate if none provided)
-    var timestamps = payload.timestamps || [new Date().getTime(), new Date().getTime() + Math.round(1000 * (payload.frames.length - 1) / payload.framerate)]; 
+    var timestamps = payload.timestamps || [new Date().getTime(), new Date().getTime() + Math.round(1000 * (payload.frames.length - 1) / payload.framerate)];
 
     frameConverter.convertFramesToMKVFragment(payload.frames, { framerate: payload.framerate })
         .then(function(mkvData) {
@@ -118,7 +118,7 @@ const processFrameData = (event, context, callback) => {
                     Key: "mkv_uploads/" + mkvData.outputFilename,
                     ContentType: "video/x-matroska",
                     Metadata: {
-                        
+
                     }
                 };
                 s3Params.Metadata[process.env.PRODUCER_START_TIMESTAMP_KEY] = timestamps[0].toString();

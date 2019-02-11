@@ -1,6 +1,6 @@
-/* 
+/*
  * Authored by Runpeng Liu,
- * Brain Power (2018) 
+ * Brain Power (2018)
  */
 
 const TMP_DIR = process.env.local ? "./tmp" : "/tmp"; // The temp directory to write the image frames to before video conversion. On AWS Lambda, this must be `/tmp`
@@ -54,7 +54,7 @@ exports.convertFramesToMKVFragment = function(frameDataArray, params) {
             // Currently, this is the command being used: `ffmpeg -r %r -f image2 -s 640x480 -i %i -vcodec libx264 -crf 25 -pix_fmt yuv420p %o`
             // -r specifies the frame rate
             // -s specifies the output resolution
-            // -i specifies the sequence of input frames using wildcard filepath notation 
+            // -i specifies the sequence of input frames using wildcard filepath notation
             //    e.g. 'XXXXX-frame-%03d.jpg' searches for filenames padded to 3 digits: 'XXXXX-frame-000.jpg', 'XXXXX-frame-001.jpg', etc.
             // -o specifies the output filepath
             // -vcodec specifies the video encoding; must be libx264 to compatible with Kinesis Video Stream
