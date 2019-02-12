@@ -8,3 +8,4 @@ tmp/
 .idea/
 blog/attachments/ignore
 blog/scratch
+build/
