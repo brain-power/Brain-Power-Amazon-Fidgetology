@@ -62,11 +62,16 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         interval: 5 * 60 * 1000,
         displayName: 'Last 5 min'
     }];
+
+    $scope.faceSelections = [];
+
     $scope.threshold_colors = ["#009966", "#ffde33", "#ff9933", "#cc0033", "#660099"];
 
     $scope.selectedMetric = $scope.metricsConfigs[1];
 
     $scope.selectedPlotHistory = $scope.plottingHistorySettings[1];
+
+    $scope.selectedFace = $scope.faceSelections[0];
 
     var flatten = function(obj, name, stem) {
         var merge = function(objects) {
@@ -94,6 +99,17 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
     function getTimeLabel(tMillis, relative) {
         var date = new Date(Math.round(tMillis));
         return relative ? $filter('date')(date, 'm:ss') : $filter('date')(date, "h:mm:ss a");
+    }
+
+    function updateFaceSelections(faces) {
+      var numFaces = faces.length;
+      if (numFaces <= $scope.faceSelections.length) return;
+      $scope.faceSelections = faces.map(function(face, index) {
+        return {
+          index: index,
+          displayName: "Individual " + String(index+1)
+        };
+      });
     }
 
     $scope.init = function() {
@@ -189,17 +205,20 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
     var handleNewRecords = function(event, records) {
         records.forEach(function(record, index) {
             record.data.FaceSearchResponse.forEach((faceSearchResponse) => {
-              faceSearchResponse.DetectedFace = flatten(faceSearchResponse.DetectedFace);
+                faceSearchResponse.DetectedFace = flatten(faceSearchResponse.DetectedFace);
 
-              Object.keys(record.data.InputInformation.KinesisVideo).forEach(function(key) {
-                  faceSearchResponse.DetectedFace[key] = record.data.InputInformation.KinesisVideo[key];
-              });
-              faceSearchResponse.DetectedFace.numFaces = record.data.FaceSearchResponse.length;
+                Object.keys(record.data.InputInformation.KinesisVideo).forEach(function(key) {
+                    faceSearchResponse.DetectedFace[key] = record.data.InputInformation.KinesisVideo[key];
+                });
+                faceSearchResponse.DetectedFace.numFaces = record.data.FaceSearchResponse.length;
             });
+            updateFaceSelections(record.data.FaceSearchResponse);
         });
         recordsBuffer = recordsBuffer.concat(records);
         if (chartUpdateLocked) return;
-        var facesData = records.map(function(record) {
+        var facesData = records.filter(function(record){
+            return record.data.FaceSearchResponse && record.data.FaceSearchResponse[faceIndex] != null;
+        }).map(function(record) {
             return record.data.FaceSearchResponse[faceIndex].DetectedFace;
         });
         var plotOptions = getPlotOptions(facesData);
@@ -338,7 +357,10 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
 
     $scope.plotHistoryChanged = function() {
         chartUpdateLocked = true;
-        $scope.raw_metrics_chart_opts.xAxis.data = recordsBuffer.map(function(record) {
+        var faceRecords = recordsBuffer.filter(function(record) {
+          return record.data.FaceSearchResponse && record.data.FaceSearchResponse[faceIndex] != null;
+        });
+        $scope.raw_metrics_chart_opts.xAxis.data = faceRecords.map(function(record) {
             var face = record.data.FaceSearchResponse[faceIndex].DetectedFace;
             return Math.round(1000 * face.Timestamp);
         });
@@ -347,7 +369,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                 return {
                     name: factor,
                     type: 'line',
-                    data: recordsBuffer.map(function(record) {
+                    data: faceRecords.map(function(record) {
                         return record.data.FaceSearchResponse[faceIndex].DetectedFace[factor]
                     }),
                     smooth: true
@@ -372,6 +394,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
     $scope.metricChanged = function() {
         chartUpdateLocked = true;
         echarts.dispose($scope.raw_metrics_echart);
+        faceIndex = $scope.selectedFace && $scope.selectedFace.index || 0;
         $scope.raw_metrics_echart = echarts.init($("#chart-metrics-raw").get(0));
         $scope.raw_metrics_chart_opts.title.text = $scope.selectedMetric.displayName;
         $scope.raw_metrics_chart_opts.yAxis.name = $scope.selectedMetric.yAxisLabel;

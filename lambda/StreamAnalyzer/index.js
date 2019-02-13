@@ -25,17 +25,18 @@ exports.handler = (event, context, callback) => {
     if (faceRecords.length < 2) {
         return callback(null, `Not enough records to process.`);
     }
+    // keep data history needed for computations. Currently, one previous face per index.
+    var facesBuffer = {}
     // Do post-processing on detected faces.
     faceRecords.forEach((record, index) => {
         // TODO: how do we track faces that may shift around in the array?
         for (var faceIndex = 0; faceIndex < record.data.FaceSearchResponse.length; faceIndex++) {
           var prev = (index == 0) ? 0 : index - 1;
           var detectedFace = record.data.FaceSearchResponse[faceIndex].DetectedFace;
-          var prevFaceSearchResponse = faceRecords[prev].data.FaceSearchResponse[faceIndex]
-          // TODO: scan for last frame, don't just immediately fall back to current
-          var previousFace = prevFaceSearchResponse && prevFaceSearchResponse.DetectedFace || detectedFace;
+          var prevFace = facesBuffer[faceIndex]] || detectedFace
           detectedFace.RecordIndex = index;
           processDetectedFace(detectedFace, previousFace, record.data.InputInformation.KinesisVideo);
+          facesBuffer[faceIndex] = detectedFace;
         }
     });
 
