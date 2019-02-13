@@ -38,6 +38,15 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         yMin: 0,
         precision: 0,
         units: "pct"
+    }, {
+        displayName: "Number of Faces",
+        plottingFactors: ["numFaces"],
+        thresholds: [1, 2, 3, 4],
+        yAxisLabel: "Number of Faces",
+        yMax: 7,
+        yMin: 0,
+        precision: 0,
+        units: "faces"
     }];
 
     $scope.plottingHistorySettings = [{
@@ -185,6 +194,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
               Object.keys(record.data.InputInformation.KinesisVideo).forEach(function(key) {
                   faceSearchResponse.DetectedFace[key] = record.data.InputInformation.KinesisVideo[key];
               });
+              faceSearchResponse.DetectedFace.numFaces = record.data.FaceSearchResponse.length;
             });
         });
         recordsBuffer = recordsBuffer.concat(records);
