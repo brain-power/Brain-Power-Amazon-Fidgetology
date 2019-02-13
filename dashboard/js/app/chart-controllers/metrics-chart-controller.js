@@ -28,6 +28,15 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         yMin: 0,
         precision: 2,
         units: "face lengths / sec"
+    }, {
+        displayName: "Face Quality",
+        plottingFactors: ["Quality.Brightness", "Quality.Sharpness"],
+        thresholds: [20, 40, 60, 80],
+        yAxisLabel: "Face image quality",
+        yMax: 100,
+        yMin: 0,
+        precision: 0,
+        units: "pct"
     }];
 
     $scope.plottingHistorySettings = [{
