@@ -1,6 +1,6 @@
-/* 
+/*
  * Authored by Runpeng Liu,
- * Brain Power (2018) 
+ * Brain Power (2018)
  */
 
 const aws = require('aws-sdk');
@@ -61,6 +61,7 @@ exports.handler = (event, context, callback) => {
                    params.ContentType = MKV_MIME_TYPE;
                    s3.putObject(params, function(err, data) {
                     try {
+                        fs.unlink(tempWriteLocation);
                         fs.unlink(outputLocation);
                     } catch(e) {}
                     if (err) return callback(err);
