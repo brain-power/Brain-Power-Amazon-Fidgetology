@@ -127,6 +127,12 @@
                             </md-option>
                         </md-select>
                     </md-input-container>
+                    <!-- <md-input-container flex>
+                        <label>Selected Face</label>
+                        <md-select ng-model="selectedFace" ng-change="metricChanged()">
+                            <md-option> 1 </md-repeat>
+                        </md-select>
+                    </md-input-container> -->
                 </section>
                 <br>
                 <h2 ng-if="isStreaming && !latestMetricTimestamp" align="center"> ... Waiting for data ... </h2>

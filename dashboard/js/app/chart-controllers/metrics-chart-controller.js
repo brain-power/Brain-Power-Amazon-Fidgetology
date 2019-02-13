@@ -1,6 +1,7 @@
 app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filter', function($scope, $http, $timeout, $filter) {
     var $ = angular.element;
     var recordsBuffer = [];
+    var faceIndex = 0;
 
     $scope.metricsConfigs = [{
         displayName: "Face Pose",
@@ -178,17 +179,18 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
 
     var handleNewRecords = function(event, records) {
         records.forEach(function(record, index) {
-            var face = record.data.FaceSearchResponse[0].DetectedFace;
-            record.data.FaceSearchResponse[0].DetectedFace = flatten(face);
+            record.data.FaceSearchResponse.forEach((faceSearchResponse) => {
+              faceSearchResponse.DetectedFace = flatten(faceSearchResponse.DetectedFace);
 
-            Object.keys(record.data.InputInformation.KinesisVideo).forEach(function(key) {
-                record.data.FaceSearchResponse[0].DetectedFace[key] = record.data.InputInformation.KinesisVideo[key];
+              Object.keys(record.data.InputInformation.KinesisVideo).forEach(function(key) {
+                  faceSearchResponse.DetectedFace[key] = record.data.InputInformation.KinesisVideo[key];
+              });
             });
         });
         recordsBuffer = recordsBuffer.concat(records);
         if (chartUpdateLocked) return;
         var facesData = records.map(function(record) {
-            return record.data.FaceSearchResponse[0].DetectedFace;
+            return record.data.FaceSearchResponse[faceIndex].DetectedFace;
         });
         var plotOptions = getPlotOptions(facesData);
         $scope.raw_metrics_chart_opts.xAxis.data = plotOptions.xAxis.data || $scope.raw_metrics_chart_opts.xAxis.data;
@@ -327,7 +329,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
     $scope.plotHistoryChanged = function() {
         chartUpdateLocked = true;
         $scope.raw_metrics_chart_opts.xAxis.data = recordsBuffer.map(function(record) {
-            var face = record.data.FaceSearchResponse[0].DetectedFace;
+            var face = record.data.FaceSearchResponse[faceIndex].DetectedFace;
             return Math.round(1000 * face.Timestamp);
         });
         $scope.raw_metrics_chart_opts.series = $scope.selectedMetric.plottingFactors
@@ -336,7 +338,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                     name: factor,
                     type: 'line',
                     data: recordsBuffer.map(function(record) {
-                        return record.data.FaceSearchResponse[0].DetectedFace[factor]
+                        return record.data.FaceSearchResponse[faceIndex].DetectedFace[factor]
                     }),
                     smooth: true
                 }
