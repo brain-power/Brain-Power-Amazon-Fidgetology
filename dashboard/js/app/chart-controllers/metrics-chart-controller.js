@@ -63,7 +63,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
         var newStem = (typeof stem !== 'undefined' && stem !== '') ? stem + '.' + name : name;
         if (typeof obj !== 'object') {
             out[newStem] = obj;
-            return out; 
+            return out;
         }
         for (var p in obj) {
             var prop = flatten(obj[p], p, newStem);
@@ -228,7 +228,7 @@ app.controller('MetricsChartController', ['$scope', '$http', '$timeout', '$filte
                     data: ($scope.selectedMetric.thresholds || []).map(function(v) {
                         return { yAxis: v };
                     })
-                }, 
+                },
                 smooth: true
             };
             opts.series.push(seriesItem);

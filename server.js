@@ -1,6 +1,6 @@
-/* 
+/*
  * Authored by Runpeng Liu,
- * Brain Power (2018) 
+ * Brain Power (2018)
  */
 
 var fs = require('fs'),

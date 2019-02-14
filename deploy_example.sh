@@ -27,7 +27,14 @@ if [ -z "$IS_VALID_REGION" ]; then
 fi
 
 ACCOUNT_ID=$(aws sts get-caller-identity --output text --query 'Account')
+if [ -z "$ACCOUNT_ID" ]; then
+	echo "Error getting account ID. Please confirm your AWS CLI is configured correctly."
+	exit 1
+fi
+
 BOOTSTRAP_BUCKET_NAME="${STACK_NAME}-bootstrap-${ACCOUNT_ID}"
+
+set -e
 
 aws s3 mb s3://${BOOTSTRAP_BUCKET_NAME}
 
