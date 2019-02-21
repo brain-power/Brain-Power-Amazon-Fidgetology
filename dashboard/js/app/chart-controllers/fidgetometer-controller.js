@@ -191,7 +191,7 @@ app.controller('FidgetometerController', ['$scope', '$http', '$timeout', '$filte
         var newStem = (typeof stem !== 'undefined' && stem !== '') ? stem + '.' + name : name;
         if (typeof obj !== 'object') {
             out[newStem] = obj;
-            return out; 
+            return out;
         }
         for (var p in obj) {
             var prop = flatten(obj[p], p, newStem);
@@ -202,16 +202,23 @@ app.controller('FidgetometerController', ['$scope', '$http', '$timeout', '$filte
 
     var handleNewRecords = function(event, records) {
         var averageFidgetQuotient = 0;
+        var numFaceRecords = 0;
         records.forEach(function(record) {
-            var face = record.data.FaceSearchResponse[0].DetectedFace;
-            face.FidgetQuotient = computeFidgetQuotient(face);
-            averageFidgetQuotient += (face.FidgetQuotient / records.length);
-
-            record.data.FaceSearchResponse[0].DetectedFace = flatten(face);
-            Object.keys(record.data.InputInformation.KinesisVideo).forEach(function(key) {
-                record.data.FaceSearchResponse[0].DetectedFace[key] = record.data.InputInformation.KinesisVideo[key];
+            record.data.FaceSearchResponse.forEach((faceSearchResponse, index) => {
+                var face = faceSearchResponse.DetectedFace;
+                face.FidgetQuotient = computeFidgetQuotient(face);
+                if (face.FidgetQuotient) {
+                    averageFidgetQuotient += face.FidgetQuotient;
+                    numFaceRecords += 1;
+                }
+                record.data.FaceSearchResponse[index].DetectedFace = flatten(face);
+                Object.keys(record.data.InputInformation.KinesisVideo).forEach(function(key) {
+                    face[key] = record.data.InputInformation.KinesisVideo[key];
+                });
             });
         });
+        if (numFaceRecords > 0) { averageFidgetQuotient /= numFaceRecords; }
+
         $scope.averageFidgetQuotient = Number(averageFidgetQuotient.toFixed(1));
         updateFidgetMeter();
 
