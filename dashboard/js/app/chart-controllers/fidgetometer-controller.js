@@ -73,8 +73,8 @@ app.controller('FidgetometerController', ['$scope', '$http', '$timeout', '$filte
         };
 
         var initLineChart = function(){
-            $scope.raw_metrics_echart = echarts.init($("#chart-metrics-fidget").get(0));
-            $scope.raw_metrics_chart_opts = {
+            $scope.fidgetometer_line_chart = echarts.init($("#chart-metrics-fidget").get(0));
+            $scope.fidgetometer_line_chart_opts = {
                 textStyle: {
                     fontFamily: 'Ubuntu',
                     fontSize: 16
@@ -223,15 +223,14 @@ app.controller('FidgetometerController', ['$scope', '$http', '$timeout', '$filte
         updateFidgetMeter();
 
         recordsBuffer = recordsBuffer.concat(records);
-        if (chartUpdateLocked) return;
         var facesData = records.map(function(record) {
             return record.data.FaceSearchResponse[0].DetectedFace;
         });
         var plotOptions = getPlotOptions(facesData);
-        $scope.raw_metrics_chart_opts.xAxis.data = plotOptions.xAxis.data || $scope.raw_metrics_chart_opts.xAxis.data;
-        $scope.raw_metrics_chart_opts.series = plotOptions.series || $scope.raw_metrics_chart_opts.series;
-        $scope.raw_metrics_chart_opts.visualMap = plotOptions.visualMap;
-        $scope.raw_metrics_echart.setOption($scope.raw_metrics_chart_opts);
+        $scope.fidgetometer_line_chart_opts.xAxis.data = plotOptions.xAxis.data || $scope.fidgetometer_line_chart_opts.xAxis.data;
+        $scope.fidgetometer_line_chart_opts.series = plotOptions.series || $scope.fidgetometer_line_chart_opts.series;
+        $scope.fidgetometer_line_chart_opts.visualMap = plotOptions.visualMap;
+        $scope.fidgetometer_line_chart.setOption($scope.fidgetometer_line_chart_opts);
     };
 
     function getTimeLabel(tMillis, relative) {
@@ -244,8 +243,8 @@ app.controller('FidgetometerController', ['$scope', '$http', '$timeout', '$filte
             series: [],
             xAxis: {}
         };
-        var previousSeries = $scope.raw_metrics_chart_opts.series || [];
-        var previousTimestamps = $scope.raw_metrics_chart_opts.xAxis.data || [];
+        var previousSeries = $scope.fidgetometer_line_chart_opts.series || [];
+        var previousTimestamps = $scope.fidgetometer_line_chart_opts.xAxis.data || [];
         var recentFaceData = facesData.filter(function(face) {
             return (1000 * face.Timestamp) > ($scope.latestMetricTimestamp || 0);
         });
@@ -362,53 +361,6 @@ app.controller('FidgetometerController', ['$scope', '$http', '$timeout', '$filte
                 color: $scope.threshold_colors[4]
             }]
         }
-    };
-
-    var chartUpdateLocked = false;
-
-    $scope.plotHistoryChanged = function() {
-        chartUpdateLocked = true;
-        $scope.raw_metrics_chart_opts.xAxis.data = recordsBuffer.map(function(record) {
-            var face = record.data.FaceSearchResponse[0].DetectedFace;
-            return Math.round(1000 * face.Timestamp);
-        });
-        $scope.raw_metrics_chart_opts.series = $scope.selectedMetric.plottingFactors
-            .map(function(factor) {
-                return {
-                    name: factor,
-                    type: 'line',
-                    data: recordsBuffer.map(function(record) {
-                        return record.data.FaceSearchResponse[0].DetectedFace[factor]
-                    })
-                }
-            });
-        $scope.latestMetricTimestamp = $scope.raw_metrics_chart_opts.xAxis.data[$scope.raw_metrics_chart_opts.xAxis.data.length - 1];
-        while ($scope.raw_metrics_chart_opts.xAxis.data[0] < $scope.latestMetricTimestamp - $scope.selectedPlotHistory.interval) {
-            $scope.raw_metrics_chart_opts.xAxis.data.shift();
-            $scope.raw_metrics_chart_opts.series.forEach(function(series) {
-                series.data.shift();
-            });
-        }
-        if ($scope.selectedMetric.thresholds) {
-            $scope.raw_metrics_chart_opts.series.forEach(function(series) {
-                series.areaStyle = getAreaGradient(series.data);
-            });
-        }
-        $scope.raw_metrics_echart.setOption($scope.raw_metrics_chart_opts);
-        chartUpdateLocked = false;
-    };
-
-    $scope.metricChanged = function() {
-        chartUpdateLocked = true;
-        echarts.dispose($scope.raw_metrics_echart);
-        $scope.raw_metrics_echart = echarts.init($("#chart-metrics-raw").get(0));
-        $scope.raw_metrics_chart_opts.title.text = $scope.selectedMetric.displayName;
-        $scope.raw_metrics_chart_opts.yAxis.name = $scope.selectedMetric.yAxisLabel;
-        $scope.raw_metrics_chart_opts.yAxis.max = isNaN($scope.selectedMetric.yMax) ? 'dataMax' : $scope.selectedMetric.yMax;
-        $scope.raw_metrics_chart_opts.yAxis.min = isNaN($scope.selectedMetric.yMin) ? 'dataMin' : $scope.selectedMetric.yMin;
-        $scope.raw_metrics_chart_opts.visualMap = $scope.selectedMetric.thresholds ? getVisualMapPieces() : null;
-        $scope.plotHistoryChanged();
-        chartUpdateLocked = false;
     };
 
     $scope.$on("newRecords", handleNewRecords);
