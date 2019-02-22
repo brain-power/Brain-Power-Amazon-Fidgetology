@@ -126,6 +126,14 @@
                                 {{interval.displayName}}
                             </md-option>
                         </md-select>
+                    </md-input-container> &nbsp;
+                    <md-input-container flex>
+                        <label>Selected Face</label>
+                        <md-select ng-model="selectedFace" ng-change="metricChanged()">
+                            <md-option ng-repeat="faceIndex in faceSelections" ng-value="faceIndex">
+                                {{faceIndex.displayName}}
+                            </md-option>
+                        </md-select>
                     </md-input-container>
                 </section>
                 <br>
