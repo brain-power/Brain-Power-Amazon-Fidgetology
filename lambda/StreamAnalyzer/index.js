@@ -33,9 +33,9 @@ exports.handler = (event, context, callback) => {
         for (var faceIndex = 0; faceIndex < record.data.FaceSearchResponse.length; faceIndex++) {
           var prev = (index == 0) ? 0 : index - 1;
           var detectedFace = record.data.FaceSearchResponse[faceIndex].DetectedFace;
-          var prevFace = facesBuffer[faceIndex]] || detectedFace
+          var prevFace = facesBuffer[faceIndex] || detectedFace
           detectedFace.RecordIndex = index;
-          processDetectedFace(detectedFace, previousFace, record.data.InputInformation.KinesisVideo);
+          processDetectedFace(detectedFace, prevFace, record.data.InputInformation.KinesisVideo);
           facesBuffer[faceIndex] = detectedFace;
         }
     });
