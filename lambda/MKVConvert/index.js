@@ -61,8 +61,8 @@ exports.handler = (event, context, callback) => {
                    params.ContentType = MKV_MIME_TYPE;
                    s3.putObject(params, (err, data) => {
                     try {
-                        fs.unlink(tempWriteLocation);
-                        fs.unlink(outputLocation);
+                        fs.unlinkSync(tempWriteLocation);
+                        fs.unlinkSync(outputLocation);
                     } catch(e) {}
                     if (err) return callback(err);
                     console.log("Upload complete.");

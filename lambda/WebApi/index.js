@@ -125,9 +125,9 @@ const processFrameData = (event, context, callback) => {
                 s3.putObject(s3Params, (err, data) => {
                     try {
                         // Deletes all temp files created by this process once S3 upload completes.
-                        fs.unlink(mkvData.outputFileLocation);
+                        fs.unlink(mkvData.outputFileLocation, () => {});
                         mkvData.persistedFrames.forEach((file) => {
-                            fs.unlink(file);
+                            fs.unlink(file, () => {});
                         });
                     } catch (e) {}
                     if (err) {
