@@ -17,8 +17,8 @@ const frameConverter = require("./frame-converter");
 const createResponse = (statusCode, body) => {
     body = (typeof body === "string") ? body : JSON.stringify(body);
     return {
-        statusCode: statusCode,
-        body: body,
+        statusCode,
+        body,
         headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
@@ -54,7 +54,7 @@ const getConfig = (event, context, callback) => {
 };
 
 // GET /ProcessedStream
-var readProcessedStream = (event, context, callback) => {
+const readProcessedStream = (event, context, callback) => {
     // TODO
     callback(null, createResponse(200, {
 
@@ -63,14 +63,14 @@ var readProcessedStream = (event, context, callback) => {
 
 // GET /App/path/to/resource
 const renderStatic = (event, context, callback) => {
-    var resourcePath = event.path.replace(/\/App\/?/, "");
-    if (resourcePath.indexOf(".") === -1) {
+    let resourcePath = event.path.replace(/\/App\/?/, "");
+    if (!resourcePath.includes(".")) {
         resourcePath += "index.html";
     }
     s3.getObject({
         Bucket: process.env.WEBAPP_BUCKET_NAME,
         Key: resourcePath
-    }, function(err, data) {
+    }, (err, data) => {
         if (err) {
             callback(null, createResponse(400, err));
         } else {
@@ -93,7 +93,7 @@ const renderStatic = (event, context, callback) => {
 //      ProducerTimestamp parameter in /putMedia request when converted stream fragment is published to Kinesis Video Stream.
 // }
 const processFrameData = (event, context, callback) => {
-    var payload = event.body;
+    const payload = event.body;
     if (!payload.framerate) {
         return callback(null, createResponse(400, "Unknown framerate."));
     }
@@ -106,23 +106,23 @@ const processFrameData = (event, context, callback) => {
     console.log(`Received ${payload.frames.length} frames at ${payload.framerate} FPS`);
 
     // (infer timestamps from framerate if none provided)
-    var timestamps = payload.timestamps || [new Date().getTime(), new Date().getTime() + Math.round(1000 * (payload.frames.length - 1) / payload.framerate)];
+    const timestamps = payload.timestamps || [new Date().getTime(), new Date().getTime() + Math.round(1000 * (payload.frames.length - 1) / payload.framerate)];
 
     frameConverter.convertFramesToMKVFragment(payload.frames, { framerate: payload.framerate })
-        .then(function(mkvData) {
+        .then(mkvData => {
             function uploadToS3() {
                 // Uploads and archives MKV fragment to S3
-                var s3Params = {
+                const s3Params = {
                     Bucket: process.env.UPLOADS_BUCKET_NAME,
                     Body: fs.createReadStream(mkvData.outputFileLocation),
-                    Key: "mkv_uploads/" + mkvData.outputFilename,
+                    Key: `mkv_uploads/${mkvData.outputFilename}`,
                     ContentType: "video/x-matroska",
                     Metadata: {
 
                     }
                 };
                 s3Params.Metadata[process.env.PRODUCER_START_TIMESTAMP_KEY] = timestamps[0].toString();
-                s3.putObject(s3Params, function(err, data) {
+                s3.putObject(s3Params, (err, data) => {
                     try {
                         // Deletes all temp files created by this process once S3 upload completes.
                         fs.unlink(mkvData.outputFileLocation);
@@ -138,17 +138,17 @@ const processFrameData = (event, context, callback) => {
                 });
             }
             uploadToS3();
-        }).catch(function(err) {
+        }).catch(err => {
             callback(null, createResponse(500, err));
         });
 };
 
 // Local mirror for testing.
 exports.processFrameData = (req, res) => {
-    var event = {
+    const event = {
         body: req.body
     };
-    processFrameData(event, null, function(err, resp) {
+    processFrameData(event, null, (err, resp) => {
         if (err) return res.status(500).send(err);
         res.status(resp.statusCode).json(JSON.parse(resp.body));
     });

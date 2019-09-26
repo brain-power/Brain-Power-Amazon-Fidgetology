@@ -1,6 +1,6 @@
-var fs = require("fs");
+const fs = require("fs");
 
-var records = fs.readFileSync("test_records_b64.txt", "utf8").split(/\r?\n/);
+let records = fs.readFileSync("test_records_b64.txt", "utf8").split(/\r?\n/);
 
 records = records.filter((record) => { return record.trim() });
 
