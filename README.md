@@ -113,27 +113,23 @@ CloudFormation](https://aws.amazon.com/cloudformation/) as a *Change Set for a N
 
 Click the button to begin the stack creation process:
 
-**Full** Version:  <a target="_blank" href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stack/changeset/new?templateURL=https:%2F%2Fs3.amazonaws.com%2Fbrainpower-aws-blogs%2Fartifacts%2Ffidgetology-demo-app%2Fmaster-template.yaml"><span><img height="24px" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png"/></span></a>
+**Full** Version:  <a target="_blank" href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/template?templateURL=https:%2F%2Fs3.amazonaws.com%2Fbrainpower-aws-blogs%2Fartifacts%2Ffidgetology-demo-app%2Fmaster-template.yaml"><span><img height="24px" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png"/></span></a>
 
-**Lite** Version:  <a target="_blank" href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stack/changeset/new?templateURL=https:%2F%2Fs3.amazonaws.com%2Fbrainpower-aws-blogs%2Fartifacts%2Ffidgetology-demo-app%2Fpackaged-template_lite.yaml"><span><img height="24px" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png"/></span></a>
+**Lite** Version:  <a target="_blank" href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/template?templateURL=https:%2F%2Fs3.amazonaws.com%2Fbrainpower-aws-blogs%2Fartifacts%2Ffidgetology-demo-app%2Fpackaged-template_lite.yaml"><span><img height="24px" src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png"/></span></a>
 
-**Step 1.** Click **Next**, and specify **brain-power-fidgetology-demo** as both the **Stack name** and **Change set name**. Accept all default parameters and click **Next**.
+**Step 1.** Click **Next**, and specify **brain-power-fidgetology-demo** as the **Stack name**. Accept all default parameters and click **Next**.
 
 <kbd>
  <img src="attachments/screenshots/Brain_Power_fidgetology_05__CreateChangeSetDetails.png?raw=true">
 </kbd></br></br>
 
-**Step 2.** Click **Next** again to get to the final Review page. Under *Capabilities*, confirm acknowledgement that new IAM resources will be created. Then click **Create change set**.
+**Step 2.** Click **Next** again to get to the final Review page. Under *Capabilities and transforms*, confirm acknowledgement that new IAM resources will be created. Then click **Create stack**.
 
 <kbd>
  <img src="attachments/screenshots/Brain_Power_fidgetology_06__CreateChangeSetIAM.png?raw=true">
 </kbd><br/><br/>
 
-**Step 3.** On the next page, wait for the stack to finish 'Computing changes'. Then click **Execute** (top-right corner of page) to start the stack deployment. Confirm, and refresh the CloudFormation page to find your newly created stack. Click on it to monitor the deployment process, which should take no more than 3 minutes.
-
-<kbd>
- <img src="attachments/screenshots/Brain_Power_fidgetology_07__CreateChangeSetExecute.png?raw=true">
-</kbd><br/>
+**Step 3.** Refresh the CloudFormation page to find your newly created stack. Click on it to monitor the deployment process, which should take no more than 3 minutes.
 
 <kbd>
  <img src="attachments/screenshots/Brain_Power_fidgetology_08__CreateStackInProgress.png?raw=true">
