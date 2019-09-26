@@ -11,29 +11,29 @@ const kinesis = new aws.Kinesis();
 // from the output of Rekognition stream processor.
 // For data specification, see: https://docs.aws.amazon.com/rekognition/latest/dg/streaming-video-kinesis-output.html
 exports.handler = (event, context, callback) => {
-    var records = event.Records;
+    const records = event.Records;
     records.forEach((record) => {
         // Kinesis data is base64 encoded so decode here
         const payload = new Buffer(record.kinesis.data, 'base64').toString('ascii');
-        var data = JSON.parse(payload);
+        const data = JSON.parse(payload);
         record.data = data;
     });
     // Filter for records that contain a detected face.
-    var faceRecords = records.filter((record) => {
+    const faceRecords = records.filter((record) => {
         return record.data.FaceSearchResponse && record.data.FaceSearchResponse.length;
     });
     if (faceRecords.length < 2) {
         return callback(null, `Not enough records to process.`);
     }
     // keep data history needed for computations. Currently, one previous face per index.
-    var facesBuffer = {}
+    const facesBuffer = {};
     // Do post-processing on detected faces.
     faceRecords.forEach((record, index) => {
         // TODO: how do we track faces that may shift around in the array?
-        for (var faceIndex = 0; faceIndex < record.data.FaceSearchResponse.length; faceIndex++) {
-          var prev = (index == 0) ? 0 : index - 1;
-          var detectedFace = record.data.FaceSearchResponse[faceIndex].DetectedFace;
-          var prevFace = facesBuffer[faceIndex] || detectedFace
+        for (let faceIndex = 0; faceIndex < record.data.FaceSearchResponse.length; faceIndex++) {
+          const prev = (index == 0) ? 0 : index - 1;
+          const detectedFace = record.data.FaceSearchResponse[faceIndex].DetectedFace;
+          const prevFace = facesBuffer[faceIndex] || detectedFace;
           detectedFace.RecordIndex = index;
           processDetectedFace(detectedFace, prevFace, record.data.InputInformation.KinesisVideo);
           facesBuffer[faceIndex] = detectedFace;
@@ -42,9 +42,9 @@ exports.handler = (event, context, callback) => {
 
     faceRecords.shift();
 
-    putRecordsIntoProcessedStream(faceRecords).then(function() {
-        var firstFace = faceRecords[0];
-        var lastFace = faceRecords[faceRecords.length - 1];
+    putRecordsIntoProcessedStream(faceRecords).then(() => {
+        const firstFace = faceRecords[0];
+        const lastFace = faceRecords[faceRecords.length - 1];
         console.log(`Processed ${faceRecords.length} face records. Start: ${firstFace.data.FaceSearchResponse[0].DetectedFace.Timestamp}; End: ${lastFace.data.FaceSearchResponse[0].DetectedFace.Timestamp}`);
         callback(null, `Processing complete.`);
     }).catch(callback);
@@ -53,43 +53,41 @@ exports.handler = (event, context, callback) => {
 // Computes the position of face center based on BoundingBox data.
 // Modify for custom use case.
 function processDetectedFace(face, previousFace, inputInfo) {
-    var centerX = face.BoundingBox.Left + face.BoundingBox.Width / 2;
-    var centerY = face.BoundingBox.Top + face.BoundingBox.Height / 2;
+    const centerX = face.BoundingBox.Left + face.BoundingBox.Width / 2;
+    const centerY = face.BoundingBox.Top + face.BoundingBox.Height / 2;
     face.BoundingBox.Center = [centerX, centerY];
     face.Timestamp = Math.min(inputInfo.ProducerTimestamp + inputInfo.FrameOffsetInSeconds, inputInfo.ProducerTimestamp + face.RecordIndex);
 
     // Estimate rotational and translational velocities
     // of faces in successive frames using basic first-order derivative approximation.
-    var deltaTime = face.Timestamp - previousFace.Timestamp;
+    const deltaTime = face.Timestamp - previousFace.Timestamp;
     if (deltaTime === 0) return;
-    var deltaPosition = Math.sqrt(
-      Math.pow(face.BoundingBox.Center[0] - previousFace.BoundingBox.Center[0], 2) +
-      Math.pow(face.BoundingBox.Center[1] - previousFace.BoundingBox.Center[1], 2)
+    const deltaPosition = Math.sqrt(
+      (face.BoundingBox.Center[0] - previousFace.BoundingBox.Center[0]) ** 2 +
+      (face.BoundingBox.Center[1] - previousFace.BoundingBox.Center[1]) ** 2
     );
-    var faceLength = Math.sqrt(Math.pow(face.BoundingBox.Height, 2) + Math.pow(face.BoundingBox.Width, 2));
+    const faceLength = Math.sqrt(face.BoundingBox.Height ** 2 + face.BoundingBox.Width ** 2);
     face.TranslationalVelocity = (deltaPosition / faceLength) / deltaTime;
-    var deltaRotation = Math.sqrt(
-      Math.pow(face.Pose.Pitch - previousFace.Pose.Pitch, 2) +
-      Math.pow(face.Pose.Roll  - previousFace.Pose.Roll,  2) +
-      Math.pow(face.Pose.Yaw   - previousFace.Pose.Yaw,   2)
+    const deltaRotation = Math.sqrt(
+      (face.Pose.Pitch - previousFace.Pose.Pitch) ** 2 +
+      (face.Pose.Roll - previousFace.Pose.Roll) ** 2 +
+      (face.Pose.Yaw - previousFace.Pose.Yaw) ** 2
     );
     face.RotationalVelocity = deltaRotation / deltaTime;
 }
 
 // Put processed body motion metrics into downstream KDS
 function putRecordsIntoProcessedStream(records) {
-    var packagedRecords = records.map((record) => {
+    const packagedRecords = records.map((record) => {
         return {
             Data: JSON.stringify(record.data),
             PartitionKey: 'shard-0'
         };
     });
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
         kinesis.putRecords({
             Records: packagedRecords,
             StreamName: process.env.KDS_PROCESSED_STREAM_NAME
-        }, function(err, data) {
-            return err ? reject(err) : resolve(data);
-        });
+        }, (err, data) => err ? reject(err) : resolve(data));
     });
 }

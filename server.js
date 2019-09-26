@@ -3,28 +3,29 @@
  * Brain Power (2018)
  */
 
-var fs = require('fs'),
-    express = require('express'),
-    http = require('http'),
-    path = require('path'),
-    morgan = require('morgan'),
-    compress = require('compression'),
-    methodOverride = require('method-override'),
-    bodyParser = require('body-parser'),
-    cookieParser = require('cookie-parser'),
-    helmet = require('helmet'),
-    aws = require('aws-sdk'),
-    config = require('./local_config')
+const fs = require('fs');
+
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const morgan = require('morgan');
+const compress = require('compression');
+const methodOverride = require('method-override');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const aws = require('aws-sdk');
+const config = require('./local_config');
 
 process.env.local = true;
 process.env.AWS_REGION = config.AWS_REGION || "us-east-1";
 process.env.FFMPEG_CMD = config.FFMPEG_CMD;
 process.env.PRODUCER_START_TIMESTAMP_KEY = config.PRODUCER_START_TIMESTAMP_KEY || "producer_start_timestamp";
 
-var app = express();
+const app = express();
 
 app.use(compress({
-    filter: function(req, res) {
+    filter(req, res) {
         return (/json|text|javascript|css|font|svg/).test(res.getHeader('Content-Type'));
     },
     level: 9
@@ -46,7 +47,7 @@ app.use(helmet.hsts({
     includeSubdomains: true,
     force: true
 }));
-app.use(function(req, res, next) {
+app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
     next();
@@ -55,26 +56,26 @@ app.disable('x-powered-by');
 app.set('port', 3000);
 app.use(express.static(path.join(__dirname, 'dashboard')));
 
-var APIGatewayProxy = require("./lambda/WebApi");
+const APIGatewayProxy = require("./lambda/WebApi");
 
-var tmpDir = "./tmp";
+const tmpDir = "./tmp";
 if (!fs.existsSync(tmpDir)) {
     fs.mkdirSync(tmpDir);
 }
 
 app.post("/FrameData", APIGatewayProxy.processFrameData);
 
-var sts = new aws.STS();
-sts.getCallerIdentity({}, function(err, data) {
+const sts = new aws.STS();
+sts.getCallerIdentity({}, (err, data) => {
     if (err) {
         console.log(err);
         process.exit(1);
     } else {
-        process.env.UPLOADS_BUCKET_NAME = config.STACK_NAME + "-uploads-" + data.Account;
+        process.env.UPLOADS_BUCKET_NAME = `${config.STACK_NAME}-uploads-${data.Account}`;
         console.log("Uploads bucket: ", process.env.UPLOADS_BUCKET_NAME);
     }
 });
 
-var server = http.createServer(app).listen(app.get('port'), function() {
-    console.log("Express HTTP server listening on port " + app.get('port'));
+const server = http.createServer(app).listen(app.get('port'), () => {
+    console.log(`Express HTTP server listening on port ${app.get('port')}`);
 });

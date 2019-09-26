@@ -22,23 +22,23 @@ exports.handler = (event, context, callback) => {
         Key: key
     };
     console.log(bucket, key);
-    var filename = key.substring(key.lastIndexOf("/") + 1);
-    var filetype = key.split(".").pop();
-    s3.getObject(params, function(err, data) {
+    const filename = key.substring(key.lastIndexOf("/") + 1);
+    const filetype = key.split(".").pop();
+    s3.getObject(params, (err, data) => {
         if (err) {
             return callback(err);
         }
         data.Key = params.Key;
         data.Bucket = params.Bucket;
-        var outputFilename = filename.replace("." + filetype, MKV_FILE_EXT);
-        var outputKey = MKV_UPLOADS_PREFIX + outputFilename;
+        const outputFilename = filename.replace(`.${filetype}`, MKV_FILE_EXT);
+        const outputKey = MKV_UPLOADS_PREFIX + outputFilename;
         params.Key = outputKey;
 
         if (data.ContentType !== MKV_MIME_TYPE) {
-            var stream;
-            var tempWriteLocation;
+            let stream;
+            let tempWriteLocation;
             try {
-                tempWriteLocation = "/tmp/" + filename;
+                tempWriteLocation = `/tmp/${filename}`;
                 stream = fs.createWriteStream(tempWriteLocation);
             } catch (e) {
                 console.log(e);
@@ -47,22 +47,22 @@ exports.handler = (event, context, callback) => {
             // Download object to temp location
             stream.write(data.Body);
             stream.end();
-            stream.on("finish", function() {
+            stream.on("finish", () => {
                 console.log("Download complete.");
-                var outputLocation = "/tmp/" + outputFilename;
+                const outputLocation = `/tmp/${outputFilename}`;
                 // Convert to .MKV file for ingestion by KVS
-                var convertJob = ffmpeg(
+                const convertJob = ffmpeg(
                     (process.env.FFMPEG_CMD)
                     .replace("%i", tempWriteLocation)
                     .replace("%o", outputLocation)
-                ).then(function() {
+                ).then(() => {
                    console.log("File conversion complete.")
                    params.Body = fs.createReadStream(outputLocation);
                    params.ContentType = MKV_MIME_TYPE;
-                   s3.putObject(params, function(err, data) {
+                   s3.putObject(params, (err, data) => {
                     try {
-                        fs.unlink(tempWriteLocation);
-                        fs.unlink(outputLocation);
+                        fs.unlinkSync(tempWriteLocation);
+                        fs.unlinkSync(outputLocation);
                     } catch(e) {}
                     if (err) return callback(err);
                     console.log("Upload complete.");
@@ -73,7 +73,7 @@ exports.handler = (event, context, callback) => {
         } else {
             params.Body = data.Body;
             params.ContentType = data.ContentType;
-            s3.putObject(params, function(err, data) {
+            s3.putObject(params, (err, data) => {
                 if (err) return callback(err);
                 callback(null, "Success.");
             });

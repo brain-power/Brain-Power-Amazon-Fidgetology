@@ -11,42 +11,42 @@ const cp = require("./child-process-promise");
 const path = require("path");
 const fs = require("fs");
 
-exports.convertFramesToMKVFragment = function(frameDataArray, params) {
-    const RANDOM_KEY = Math.floor(Math.pow(10, 8) * Math.random()).toString();
-    const FRAME_PREFIX = RANDOM_KEY + "-frame-";
-    return new Promise(function(resolve, reject) {
-        var fileWritePromises = frameDataArray.filter((frameData) => {
+exports.convertFramesToMKVFragment = (frameDataArray, params) => {
+    const RANDOM_KEY = Math.floor(10 ** 8 * Math.random()).toString();
+    const FRAME_PREFIX = `${RANDOM_KEY}-frame-`;
+    return new Promise((resolve, reject) => {
+        const fileWritePromises = frameDataArray.filter((frameData) => {
             // Get rid of empty frames.
             return !!frameData;
         }).map((frameData, index) => {
             // Strip off the data:url prefix to get just the base64-encoded bytes.
-            var data = frameData.replace(/^data:image\/\w+;base64,/, "");
-            var buf = new Buffer(data, 'base64');
-            return new Promise(function(resolve, reject) {
+            const data = frameData.replace(/^data:image\/\w+;base64,/, "");
+            const buf = new Buffer(data, 'base64');
+            return new Promise((resolve, reject) => {
                 // For padding filenames of image frames
-                var pad = function(number, size) {
-                    var s = String(number);
-                    while (s.length < (size || 2)) { s = "0" + s; }
+                const pad = (number, size) => {
+                    let s = String(number);
+                    while (s.length < (size || 2)) { s = `0${s}`; }
                     return s;
                 };
-                var filename = path.join(TMP_DIR, FRAME_PREFIX + pad(index, PAD_LENGTH) + ".jpg");
+                const filename = path.join(TMP_DIR, `${FRAME_PREFIX + pad(index, PAD_LENGTH)}.jpg`);
                 // e.g. frames will be written to /tmp/XXXXX-frame-000.jpg, /tmp/XXXXX-frame-001.jpg, ...
-                fs.writeFile(filename, buf, function(err) {
+                fs.writeFile(filename, buf, err => {
                     if (err) reject(err);
                     else resolve(filename);
                 });
             });
         });
-        Promise.all(fileWritePromises).then(function(persistedFrames) {
+        Promise.all(fileWritePromises).then(persistedFrames => {
             // Output filename of streamable MKV fragment.
-            var outputFilename = "_" + new Date().getTime() + MKV_FILE_EXT;
+            const outputFilename = `_${new Date().getTime()}${MKV_FILE_EXT}`;
             // Temp write location of MKV fragment.
-            var outputFileLocation = path.resolve(path.join(TMP_DIR, outputFilename));
-            var success = function() {
+            const outputFileLocation = path.resolve(path.join(TMP_DIR, outputFilename));
+            const success = () => {
                 resolve({
-                    outputFileLocation: outputFileLocation,
-                    outputFilename: outputFilename,
-                    persistedFrames: persistedFrames
+                    outputFileLocation,
+                    outputFilename,
+                    persistedFrames
                 });
             };
             // FFMPEG_CMD for converting sequence of image frames to streamable video fragment
@@ -59,26 +59,26 @@ exports.convertFramesToMKVFragment = function(frameDataArray, params) {
             // -o specifies the output filepath
             // -vcodec specifies the video encoding; must be libx264 to compatible with Kinesis Video Stream
             // -crf specifies the compression quality - 0 is perfectly lossless (unrecommended; very slow); 100 is very lossy.
-            var ffmpegCmd = (process.env.FFMPEG_CMD)
+            let ffmpegCmd = (process.env.FFMPEG_CMD)
                 .replace("%o", outputFileLocation)
                 .replace("%r", process.env.TARGET_FRAME_RATE || 10)
-                .replace("%i", path.resolve(path.join(TMP_DIR, FRAME_PREFIX + "%0" + PAD_LENGTH.toString() + "d.jpg")));
+                .replace("%i", path.resolve(path.join(TMP_DIR, `${FRAME_PREFIX}%0${PAD_LENGTH.toString()}d.jpg`)));
             if (process.env.local) {
                 // Assume ffmpeg has been installed to path in local environment..
-                ffmpegCmd = "ffmpeg " + ffmpegCmd;
+                ffmpegCmd = `ffmpeg ${ffmpegCmd}`;
                 cp.exec(ffmpegCmd).then(success)
-	                .catch(function(err) {
+	                .catch(err => {
 	                    console.log(err);
 	                    reject(err);
 	                });
             } else {
                 ffmpeg(ffmpegCmd).then(success)
-	                .catch(function(err) {
+	                .catch(err => {
 	                    console.log(err);
 	                    reject(err);
 	                });
             }
-        }).catch(function(err) {
+        }).catch(err => {
             console.log(err);
             reject(err);
         });
