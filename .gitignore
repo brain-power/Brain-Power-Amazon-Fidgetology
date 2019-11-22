@@ -5,6 +5,7 @@ master-template.yaml
 packaged-template_lite.yaml
 *.log
 tmp/
+lambda/*/lib
 .idea/
 blog/attachments/ignore
 blog/scratch

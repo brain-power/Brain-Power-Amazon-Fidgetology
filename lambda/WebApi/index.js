@@ -6,10 +6,7 @@
 const aws = require('aws-sdk');
 aws.config.update({ region: process.env.AWS_REGION });
 const s3 = new aws.S3();
-const ffmpeg = require('./ffmpeg');
 const fs = require("fs");
-const path = require("path");
-const cp = require("./child-process-promise");
 const mime = require("./mime");
 const frameConverter = require("./frame-converter");
 
@@ -74,7 +71,7 @@ const renderStatic = (event, context, callback) => {
         if (err) {
             callback(null, createResponse(400, err));
         } else {
-            callback(null, sendFile(data.Body, require('./mime').getType(data.Key)));
+            callback(null, sendFile(data.Body, mime.getType(data.Key)));
         }
     });
 };

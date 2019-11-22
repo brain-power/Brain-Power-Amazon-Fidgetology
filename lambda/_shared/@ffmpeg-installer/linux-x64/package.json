@@ -1,0 +1,56 @@
+{
+  "_from": "@ffmpeg-installer/linux-x64@4.1.0",
+  "_id": "@ffmpeg-installer/linux-x64@4.1.0",
+  "_inBundle": false,
+  "_integrity": "sha512-Y5BWhGLU/WpQjOArNIgXD3z5mxxdV8c41C+U15nsE5yF8tVcdCGet5zPs5Zy3Ta6bU7haGpIzryutqCGQA/W8A==",
+  "_location": "/@ffmpeg-installer/linux-x64",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "@ffmpeg-installer/linux-x64@4.1.0",
+    "name": "@ffmpeg-installer/linux-x64",
+    "escapedName": "@ffmpeg-installer%2flinux-x64",
+    "scope": "@ffmpeg-installer",
+    "rawSpec": "4.1.0",
+    "saveSpec": null,
+    "fetchSpec": "4.1.0"
+  },
+  "_requiredBy": [
+    "/@ffmpeg-installer/ffmpeg"
+  ],
+  "_resolved": "https://registry.npmjs.org/@ffmpeg-installer/linux-x64/-/linux-x64-4.1.0.tgz",
+  "_shasum": "b4a5d89c4e12e6d9306dbcdc573df716ec1c4323",
+  "_spec": "@ffmpeg-installer/linux-x64@4.1.0",
+  "_where": "/root/git/aws-fidgetology-demo-app/node_modules/@ffmpeg-installer/ffmpeg",
+  "author": {
+    "name": "Kristoffer Lundén",
+    "email": "kristoffer.lunden@gmail.com"
+  },
+  "bundleDependencies": false,
+  "cpu": [
+    "x64"
+  ],
+  "deprecated": false,
+  "description": "Linux FFmpeg binary used by ffmpeg-installer",
+  "ffmpeg": "20181210-g0e8eb07980",
+  "homepage": "https://www.johnvansickle.com/ffmpeg/",
+  "keywords": [
+    "ffmpeg",
+    "binary",
+    "linux",
+    "x64"
+  ],
+  "license": "GPLv3",
+  "name": "@ffmpeg-installer/linux-x64",
+  "os": [
+    "linux"
+  ],
+  "scripts": {
+    "postinstall": "chmod u+x ffmpeg",
+    "prepublishOnly": "npm test",
+    "test": "file ffmpeg | grep -qF \"ELF 64-bit\"",
+    "upload": "npm --userconfig=../../.npmrc publish --access public"
+  },
+  "version": "4.1.0"
+}

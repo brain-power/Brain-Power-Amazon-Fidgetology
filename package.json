@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/brain-power/aws-fidgetology-demo-app#readme",
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.0.20",
     "aws-sdk": "^2.202.0",
     "body-parser": "^1.18.2",
     "compression": "^1.7.2",

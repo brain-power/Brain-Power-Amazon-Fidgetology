@@ -5,7 +5,7 @@
 
 const aws = require('aws-sdk');
 const fs = require('fs');
-const ffmpeg = require('./ffmpeg');
+const ffmpeg = require('./lib/ffmpeg');
 
 const s3 = new aws.S3();
 
