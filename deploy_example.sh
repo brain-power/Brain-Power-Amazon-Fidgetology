@@ -32,7 +32,7 @@ if [ -z "$ACCOUNT_ID" ]; then
 	exit 1
 fi
 
-BOOTSTRAP_BUCKET_NAME="${STACK_NAME}-bootstrap"
+BOOTSTRAP_BUCKET_NAME="${STACK_NAME}-bootstrap-${ACCOUNT_ID}"
 
 set -e
 
