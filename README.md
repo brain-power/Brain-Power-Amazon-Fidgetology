@@ -149,8 +149,7 @@ creates all necessary AWS resources for this project (Kinesis Video Stream, Reko
 
 **Prerequisites**:
  * (For customized deployment) [AWS-CLI](https://docs.aws.amazon.com/cli/latest/userguide/installing.html) installed. Ensure you have required permissions on your account (most notably: S3 bucket creation/deletion, full access to Rekognition and Kinesis Video Stream. Other resources launched in this project include: Lambda, API Gateway, Kinesis Data Stream)
- * (For local development only) [Node.js (>= 6)](https://nodejs.org/en/download/) installed.
- * (For local testing only) [FFmpeg](https://github.com/adaptlearning/adapt_authoring/wiki/Installing-FFmpeg) command line installed. 
+ * (For local development only) [Node.js (>= 10)](https://nodejs.org/en/download/) installed.
 
 The CloudFormation stack defined in `template.yaml` is expressed using the [AWS Serverless Application Model](https://github.com/awslabs/serverless-application-model). Review it for a description
 of the configuration options and AWS resource components. The template can be modified for a custom deployment.
@@ -172,7 +171,7 @@ This command will:
 
 ### Running locally
 
-If you deployed the stack using the command line, the web app can be tested locally. Please ensure you have [Node.JS/NPM](https://nodejs.org/en/download/) and [FFmpeg](https://github.com/adaptlearning/adapt_authoring/wiki/Installing-FFmpeg) installed and available in your path.
+If you deployed the stack using the command line, the web app can be tested locally. Please ensure you have [Node.JS/NPM](https://nodejs.org/en/download/).
 
 Before you run the local development server, you need to install the
 Node.js development dependencies with the command:

@@ -6,7 +6,7 @@ The following is a summary of each function and its event trigger.
 
 **Description:** Uses FFMpeg to convert static video uploads to streamable .MKV format for ingestion by Kinesis Video Streams
 
-**Runtime:** `nodejs6.10`
+**Runtime:** `nodejs10.x`
 
 **Event Trigger:** A new video file is created in the video uploads S3 Bucket.
 
@@ -57,7 +57,7 @@ you must follow instructions to [create a Lambda deployment package for Java](ht
 **Description:** Analyzes raw output of Rekognition Stream Processor to estimate of degree of motion for faces/bodies in video stream. 
 Publishes processed motion metrics to another Kinesis Data Stream.
 
-**Runtime:** `nodejs6.10`
+**Runtime:** `nodejs10.x`
 
 **Event Trigger**: New data records are published to Kinesis Data Stream by Rekognition Stream Processor.
 
@@ -74,7 +74,7 @@ Publishes processed motion metrics to another Kinesis Data Stream.
 **Description:**  Uses AWS SDK to provision a Kinesis Video Stream and Rekognition Stream Processor when stack is created. 
 Deletes these stream resources when stack is deleted.
             
-**Runtime:** `nodejs6.10`
+**Runtime:** `nodejs10.x`
 
 **Event Trigger:** A custom CloudFormation resource triggers execution of this function during stack creation and deletion. 
 This is a temporary workaround until Kinesis Video Stream and Rekognition Stream Processor become available as resource types in CloudFormation.

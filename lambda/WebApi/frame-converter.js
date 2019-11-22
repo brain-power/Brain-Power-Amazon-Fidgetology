@@ -6,8 +6,7 @@
 const TMP_DIR = process.env.local ? "./tmp" : "/tmp"; // The temp directory to write the image frames to before video conversion. On AWS Lambda, this must be `/tmp`
 const PAD_LENGTH = 3;
 const MKV_FILE_EXT = ".mkv";
-const ffmpeg = require("./ffmpeg");
-const cp = require("./child-process-promise");
+const ffmpeg = require('./lib/ffmpeg');
 const path = require("path");
 const fs = require("fs");
 
@@ -63,21 +62,13 @@ exports.convertFramesToMKVFragment = (frameDataArray, params) => {
                 .replace("%o", outputFileLocation)
                 .replace("%r", process.env.TARGET_FRAME_RATE || 10)
                 .replace("%i", path.resolve(path.join(TMP_DIR, `${FRAME_PREFIX}%0${PAD_LENGTH.toString()}d.jpg`)));
-            if (process.env.local) {
-                // Assume ffmpeg has been installed to path in local environment..
-                ffmpegCmd = `ffmpeg ${ffmpegCmd}`;
-                cp.exec(ffmpegCmd).then(success)
-	                .catch(err => {
-	                    console.log(err);
-	                    reject(err);
-	                });
-            } else {
-                ffmpeg(ffmpegCmd).then(success)
-	                .catch(err => {
-	                    console.log(err);
-	                    reject(err);
-	                });
-            }
+            
+            ffmpeg(ffmpegCmd)
+                .then(success)
+                .catch(err => {
+                    console.error(err);
+                    reject(err);
+                });
         }).catch(err => {
             console.log(err);
             reject(err);

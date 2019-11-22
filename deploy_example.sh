@@ -32,11 +32,14 @@ if [ -z "$ACCOUNT_ID" ]; then
 	exit 1
 fi
 
-BOOTSTRAP_BUCKET_NAME="${STACK_NAME}-bootstrap-${ACCOUNT_ID}"
+BOOTSTRAP_BUCKET_NAME="${STACK_NAME}-bootstrap"
 
 set -e
 
 aws s3 mb s3://${BOOTSTRAP_BUCKET_NAME}
+
+mkdir lambda/MKVConvert/lib && cp -r lambda/_shared/* lambda/MKVConvert/lib
+mkdir lambda/WebApi/lib && cp -r lambda/_shared/* lambda/WebApi/lib
 
 # These two lines deploy the 'Full' version of the web app (with Webcam, KVS, Rekognition Video + Analytics features)
 aws cloudformation package --template-file template.yaml --s3-bucket ${BOOTSTRAP_BUCKET_NAME} --output-template-file master-template.yaml
@@ -52,7 +55,7 @@ API_ENDPOINT=$(aws cloudformation describe-stacks --stack-name ${STACK_NAME} --o
 WEBAPP_BUCKET=$(aws cloudformation describe-stack-resources --stack-name ${STACK_NAME} --logical-resource-id WebAppBucket --output text --query 'StackResources[0].PhysicalResourceId')
 WEBAPP_URL=$(aws cloudformation describe-stacks --stack-name ${STACK_NAME} --output text --query 'Stacks[0].Outputs[?OutputKey==`WebAppSecureURL`].OutputValue')
 
-echo "var API_ENDPOINT = '${API_ENDPOINT}'" > "dashboard/js/app/config.js"
+echo "const API_ENDPOINT = '${API_ENDPOINT}'" > "dashboard/js/app/config.js"
 
 aws s3 cp dashboard/js/app/config.js s3://${WEBAPP_BUCKET}/js/app/config.js
 
