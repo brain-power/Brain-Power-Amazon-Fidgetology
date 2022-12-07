@@ -27,10 +27,10 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.0.20",
     "aws-sdk": "^2.202.0",
-    "body-parser": "^1.18.2",
+    "body-parser": "^1.20.1",
     "compression": "^1.7.2",
     "cookie-parser": "^1.4.3",
-    "express": "^4.16.2",
+    "express": "^4.18.2",
     "helmet": "^3.11.0",
     "http": "0.0.0",
     "method-override": "^2.3.10",
